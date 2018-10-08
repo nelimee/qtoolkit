@@ -34,18 +34,18 @@
 import numpy
 
 # Pauli matrices
-## Definitions with sigma
+# Definitions with sigma
 SIGMA_X = numpy.array([[0, 1], [1, 0]])
 SIGMA_Y = numpy.array([[0, -1.j], [1.j, 0]])
 SIGMA_Z = numpy.array([[1, 0], [0, -1]])
-## Aliases to the definitions with sigma
+# Aliases to the definitions with sigma
 P_X = SIGMA_X
 P_Y = SIGMA_Y
 P_Z = SIGMA_Z
 
 # Other matrices
-IDENTITY2x2 = numpy.identity(2)
-ID2 = IDENTITY2x2
+IDENTITY_2X2 = numpy.identity(2)
+ID2 = IDENTITY_2X2
 
 # Test-related constants
 USE_RANDOM_TESTS = True
