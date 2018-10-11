@@ -30,6 +30,7 @@
 # ======================================================================
 
 import numpy
+import scipy
 
 import qtoolkit.utils.types as qtypes
 
@@ -60,3 +61,15 @@ def trace_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
     difference = A - B
     eigs = numpy.linalg.eigvals(difference @ difference.T.conj())
     return numpy.linalg.norm(eigs)
+
+
+def su2_operator_norm(U: qtypes.UnitaryMatrix) -> float:
+    """Operator norm of a unitary matrix U.
+
+    ||U||_{op} = sup {||Uv|| : ||v||=1}
+
+    :param U: A unitary matrix.
+    :return: The operator norm of U.
+    """
+    eigenvalues = scipy.linalg.eigvals(U)
+    return numpy.max(numpy.abs(eigenvalues))

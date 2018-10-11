@@ -35,7 +35,7 @@ import unittest
 
 import numpy
 
-import qtoolkit.maths.matrix.su2.operator_norm as op_norm
+import qtoolkit.maths.matrix.distances as qdists
 import qtoolkit.utils.types as qtypes
 
 
@@ -58,8 +58,8 @@ class QTestCase(unittest.TestCase):
         for a more detailed explanation.
         """
         self.assertTrue(
-            numpy.isclose(numpy.linalg.norm(array1 - array2), 0, rtol=rtol,
-                          atol=atol))
+             numpy.isclose(numpy.linalg.norm(array1 - array2), 0, rtol=rtol,
+                           atol=atol))
 
     def assertOperatorNormClose(self, U: qtypes.UnitaryMatrix,
                                 V: qtypes.UnitaryMatrix, rtol: float = 1e-5,
@@ -80,5 +80,5 @@ class QTestCase(unittest.TestCase):
         message = (f"Matrices U = \n{U}\nand V = \n{V}\nare not close "
                    f"enough! ||U-V|| = {op_norm.operator_norm(U - V)}.")
         self.assertTrue(
-            numpy.isclose(op_norm.operator_norm(U - V), 0, rtol=rtol,
-                          atol=atol), msg=message)
+             numpy.isclose(qdists.su2_operator_norm(U - V), 0, rtol=rtol,
+                           atol=atol), msg=message)
