@@ -50,3 +50,12 @@ ID2 = IDENTITY_2X2
 # Test-related constants
 USE_RANDOM_TESTS = True
 RANDOM_SAMPLES = 100
+
+# Quantum gates constants
+X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
+Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
+Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)
+H = numpy.array([[1, 1], [1, -1]], dtype=numpy.complex) / numpy.sqrt(2)
+S = numpy.array([[1, 0], [0, 1.j]], dtype=numpy.complex)
+T = numpy.array([[1, 0], [0, numpy.exp(1.j * numpy.pi / 4)]],
+                dtype=numpy.complex)
