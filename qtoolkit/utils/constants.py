@@ -35,16 +35,16 @@ import numpy
 
 # Pauli matrices
 # Definitions with sigma
-SIGMA_X = numpy.array([[0, 1], [1, 0]])
-SIGMA_Y = numpy.array([[0, -1.j], [1.j, 0]])
-SIGMA_Z = numpy.array([[1, 0], [0, -1]])
+SIGMA_X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
+SIGMA_Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
+SIGMA_Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)
 # Aliases to the definitions with sigma
 P_X = SIGMA_X
 P_Y = SIGMA_Y
 P_Z = SIGMA_Z
 
 # Other matrices
-IDENTITY_2X2 = numpy.identity(2)
+IDENTITY_2X2 = numpy.identity(2, dtype=numpy.complex)
 ID2 = IDENTITY_2X2
 
 # Test-related constants
