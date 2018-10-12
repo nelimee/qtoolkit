@@ -29,42 +29,27 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures to create random complex numbers."""
-
-import unittest
+"""Routines related to random generation."""
 
 import numpy
 
-import qtoolkit.maths.random_complex as rand_complex
+
+def generate_random_complex(amplitude: float = 1.0) -> complex:
+    """Generate a random complex number.
+
+    :param amplitude: The amplitude of the complex number to generate.
+    :return: a random complex number of the desired amplitude.
+    """
+    coefficients = numpy.random.rand(2)
+    norm = numpy.linalg.norm(coefficients)
+    return (coefficients[0] + 1.j * coefficients[1]) * amplitude / norm
 
 
-class RandomComplexTestCase(unittest.TestCase):
-    """Unit-tests for the random_complex generation functions."""
+def generate_random_normalised_complexes(size: int) -> numpy.ndarray:
+    """Generate size complex numbers as a normalised vector.
 
-    def test_is_complex(self) -> None:
-        number = rand_complex.generate_random_complex()
-        self.assertTrue(isinstance(number, complex))
-
-    def test_complex_amplitude(self) -> None:
-        for amplitude in numpy.linspace(0, 100, 1000):
-            self.assertAlmostEqual(amplitude, numpy.abs(
-                rand_complex.generate_random_complex(amplitude)))
-
-    def test_complex_vector_size(self) -> None:
-        for size in (0, 1, 100, 10000):
-            self.assertEqual(size,
-                             rand_complex.generate_random_normalised_complexes(
-                                 size).size)
-
-    def test_complex_vector_negative_size(self) -> None:
-        with self.assertRaises(ValueError):
-            rand_complex.generate_random_normalised_complexes(-1)
-
-    def test_complex_vector_normalised(self) -> None:
-        for size in (1, 100, 10000):
-            self.assertAlmostEqual(1.0, numpy.linalg.norm(
-                rand_complex.generate_random_normalised_complexes(size)))
-
-
-if __name__ == '__main__':
-    unittest.main()
+    :param size: A positive integer.
+    :return: A normalised list of size random complex numbers.
+    """
+    complexes = numpy.random.rand(size) + 1.j * numpy.random.rand(size)
+    return complexes / numpy.linalg.norm(complexes)
