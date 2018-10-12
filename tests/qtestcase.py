@@ -58,8 +58,8 @@ class QTestCase(unittest.TestCase):
                    f"close enough! ||a1-a2||_2 = "
                    f"{numpy.linalg.norm(array1 - array2, 2)}.")
         self.assertTrue(
-             numpy.isclose(numpy.linalg.norm(array1 - array2), 0, rtol=rtol,
-                           atol=1e-7), msg=message)
+            numpy.isclose(numpy.linalg.norm(array1 - array2), 0, rtol=rtol,
+                          atol=1e-7), msg=message)
 
     def assertOperatorNormClose(self, U: qtypes.UnitaryMatrix,
                                 V: qtypes.UnitaryMatrix, rtol: float = 1e-5,
@@ -78,7 +78,7 @@ class QTestCase(unittest.TestCase):
         for a more detailed explanation.
         """
         message = (f"Matrices U = \n{U}\nand V = \n{V}\nare not close "
-                   f"enough! ||U-V|| = {op_norm.operator_norm(U - V)}.")
+                   f"enough! ||U-V|| = {qdists.operator_norm(U - V)}.")
         self.assertTrue(
-             numpy.isclose(qdists.su2_operator_norm(U - V), 0, rtol=rtol,
-                           atol=atol), msg=message)
+            numpy.isclose(qdists.operator_norm(U - V), 0, rtol=rtol, atol=atol),
+            msg=message)

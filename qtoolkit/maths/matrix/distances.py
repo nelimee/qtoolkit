@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Implements several distances."""
+
 import numpy
 import scipy
 
@@ -63,7 +65,7 @@ def trace_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
     return numpy.linalg.norm(eigs)
 
 
-def su2_operator_norm(U: qtypes.UnitaryMatrix) -> float:
+def operator_norm(U: qtypes.UnitaryMatrix) -> float:
     """Operator norm of a unitary matrix U.
 
     ||U||_{op} = sup {||Uv|| : ||v||=1}
