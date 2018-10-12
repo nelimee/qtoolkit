@@ -29,27 +29,36 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Declaring some useful constants for mathematical computations."""
+"""Declaring some useful constants for computations."""
 
 import numpy
+
+# Test-related constants
+USE_RANDOM_TESTS = True
+RANDOM_SAMPLES = 100
 
 # Pauli matrices
 # Definitions with sigma
 SIGMA_X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
 SIGMA_Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
 SIGMA_Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)
+SIGMA_X_SU2 = SIGMA_X / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_X))
+SIGMA_Y_SU2 = SIGMA_Y / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_Y))
+SIGMA_Z_SU2 = SIGMA_Z / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_Z))
 # Aliases to the definitions with sigma
 P_X = SIGMA_X
 P_Y = SIGMA_Y
 P_Z = SIGMA_Z
+P_X_SU2 = SIGMA_X_SU2
+P_Y_SU2 = SIGMA_Y_SU2
+P_Z_SU2 = SIGMA_Z_SU2
 
 # Other matrices
 IDENTITY_2X2 = numpy.identity(2, dtype=numpy.complex)
 ID2 = IDENTITY_2X2
-
-# Test-related constants
-USE_RANDOM_TESTS = True
-RANDOM_SAMPLES = 100
+# In SU(2)
+IDENTITY_2X2_SU2 = IDENTITY_2X2
+ID2_SU2 = ID2
 
 # Quantum gates constants
 X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
@@ -59,3 +68,10 @@ H = numpy.array([[1, 1], [1, -1]], dtype=numpy.complex) / numpy.sqrt(2)
 S = numpy.array([[1, 0], [0, 1.j]], dtype=numpy.complex)
 T = numpy.array([[1, 0], [0, numpy.exp(1.j * numpy.pi / 4)]],
                 dtype=numpy.complex)
+# Quantum gates in SU(2)
+X_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(X))
+Y_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(Y))
+Z_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(Z))
+H_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(H))
+S_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(S))
+T_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(T))
