@@ -42,24 +42,30 @@ class RandomComplexTestCase(unittest.TestCase):
     """Unit-tests for the random_complex generation functions."""
 
     def test_is_complex(self) -> None:
+        """Test is generate_random_complex returns a complex number."""
         number = rand.generate_random_complex()
         self.assertTrue(isinstance(number, complex))
 
     def test_complex_amplitude(self) -> None:
+        """Test if generate_random_normalised_complexes output is normalised."""
         for amplitude in numpy.linspace(0, 100, 1000):
             self.assertAlmostEqual(amplitude, numpy.abs(
                  rand.generate_random_complex(amplitude)))
 
     def test_complex_vector_size(self) -> None:
+        """Test generate_random_normalised_complexes output length."""
         for size in (0, 1, 100, 10000):
             self.assertEqual(size, rand.generate_random_normalised_complexes(
                  size).size)
 
     def test_complex_vector_negative_size(self) -> None:
+        """Test generate_random_normalised_complexes with negative input."""
         with self.assertRaises(ValueError):
             rand.generate_random_normalised_complexes(-1)
 
     def test_complex_vector_normalised(self) -> None:
+        """Test generate_random_normalised_complexes output normalisation for
+        different sizes."""
         for size in (1, 100, 10000):
             self.assertAlmostEqual(1.0, numpy.linalg.norm(
                  rand.generate_random_normalised_complexes(size)))
