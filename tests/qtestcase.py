@@ -42,8 +42,7 @@ import qtoolkit.utils.types as qtypes
 class QTestCase(unittest.TestCase):
     """Base class for all the tests of qtoolkit module."""
 
-    def assert2NormClose(self, array1, array2, rtol: float = 1e-5,
-                         atol: float = 1e-8) -> None:
+    def assert2NormClose(self, array1, array2, rtol: float = 1e-5) -> None:
         """Check if the two arrays are close to each other.
 
         The check is performed by computing the 2-norm of their
@@ -54,12 +53,13 @@ class QTestCase(unittest.TestCase):
         :param array2: Second array.
         :param rtol: Relative tolerance. See numpy.isclose documentation
         for a more detailed explanation.
-        :param atol: Absolute tolerance. See numpy.isclose documentation
-        for a more detailed explanation.
         """
+        message = (f"Arrays a1 = \n{array1}\nand a2 = \n{array2}\nare not "
+                   f"close enough! ||a1-a2||_2 = "
+                   f"{numpy.linalg.norm(array1 - array2, 2)}.")
         self.assertTrue(
              numpy.isclose(numpy.linalg.norm(array1 - array2), 0, rtol=rtol,
-                           atol=atol))
+                           atol=1e-7), msg=message)
 
     def assertOperatorNormClose(self, U: qtypes.UnitaryMatrix,
                                 V: qtypes.UnitaryMatrix, rtol: float = 1e-5,
