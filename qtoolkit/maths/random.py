@@ -53,3 +53,12 @@ def generate_random_normalised_complexes(size: int) -> numpy.ndarray:
     """
     complexes = numpy.random.rand(size) + 1.j * numpy.random.rand(size)
     return complexes / numpy.linalg.norm(complexes)
+
+
+def generate_unit_norm_quaternion() -> numpy.ndarray:
+    """Generate a random normalised quaternion.
+
+    :return: A random normalised quaternion.
+    """
+    quaternion = numpy.random.rand(4)
+    return quaternion / numpy.linalg.norm(quaternion)
