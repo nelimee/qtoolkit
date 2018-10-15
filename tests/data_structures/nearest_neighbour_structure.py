@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Test of the nearest-neighbour structure."""
+
 import unittest
 
 import numpy
@@ -42,9 +44,16 @@ import tests.qtestcase as qtest
 
 
 class NearestNeighbourStructureTestCase(qtest.QTestCase):
+    """Unit-tests for the nearest-neighbour structure."""
 
     @classmethod
     def setUpClass(cls) -> None:
+        """Setup done once for all. Not repeated at each test.
+
+        This setup is done only once because the unit-tests only need
+        read-only data and the cost of constructing everything before
+        each test may be non-negligible.
+        """
         dataset_size = 1000
         dimension = 3
 
@@ -59,19 +68,23 @@ class NearestNeighbourStructureTestCase(qtest.QTestCase):
             [su2_trans.su2_to_so3(seq.matrix) for seq in cls._sequences])
 
     def test_scipy_cKDTree_construction(self) -> None:
+        """Tests the construction with scipy.cKDTree as internal structure."""
         NNstruct.NearestNeighbourStructure(self._data, 'cKDTree', 40,
                                            self._sequences)
 
     def test_sklearn_KDTree_construction(self) -> None:
+        """Tests the construction with sklearn.KDTree as internal structure."""
         NNstruct.NearestNeighbourStructure(self._data, 'sklKDTree', 40,
                                            self._sequences)
 
     def test_sklearn_BallTree_construction(self) -> None:
+        """Tests the construction with slearn.BallTree as internal structure."""
         NNstruct.NearestNeighbourStructure(self._data, 'sklBallTree', 40,
                                            self._sequences)
 
     def _random_query(self,
                       nn_struct: NNstruct.NearestNeighbourStructure) -> None:
+        """Perform a random query and check the validity of the result."""
         random_matrix = gen_su2.generate_random_SU2_matrix()
         query = su2_trans.su2_to_so3(random_matrix)
         dist, res = nn_struct.query(query)
@@ -79,16 +92,19 @@ class NearestNeighbourStructureTestCase(qtest.QTestCase):
         self.assertAlmostEqual(error, dist)
 
     def test_scipy_cKDTree_query(self) -> None:
+        """Tests query validity with scipy.cKDTree as internal structure."""
         nn_struct = NNstruct.NearestNeighbourStructure(self._data, 'cKDTree',
                                                        40, self._sequences)
         self._random_query(nn_struct)
 
     def test_sklearn_KDTree_query(self) -> None:
+        """Tests query validity with sklearn.KDTree as internal structure."""
         nn_struct = NNstruct.NearestNeighbourStructure(self._data, 'sklKDTree',
                                                        40, self._sequences)
         self._random_query(nn_struct)
 
     def test_sklearn_BallTree_query(self) -> None:
+        """Tests query validity with sklearn.BallTree as internal structure."""
         nn_struct = NNstruct.NearestNeighbourStructure(self._data,
                                                        'sklBallTree', 40,
                                                        self._sequences)
