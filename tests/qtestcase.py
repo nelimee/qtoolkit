@@ -36,6 +36,7 @@ import unittest
 import numpy
 
 import qtoolkit.maths.matrix.distances as qdists
+import qtoolkit.utils.constants as qconsts
 import qtoolkit.utils.types as qtypes
 
 
@@ -82,3 +83,18 @@ class QTestCase(unittest.TestCase):
         self.assertTrue(
             numpy.isclose(qdists.operator_norm(U - V), 0, rtol=rtol, atol=atol),
             msg=message)
+
+    def assertSU2Matrix(self, M: qtypes.GenericMatrix) -> None:
+        """Check if the given matrix is in SU(2).
+
+        :param M: The matrix to check.
+        """
+        self.assertUnitaryMatrix(M)
+        self.assertAlmostEqual(numpy.linalg.det(M), 1.0)
+
+    def assertUnitaryMatrix(self, M: qtypes.GenericMatrix) -> None:
+        """Check if the given matrix is unitary.
+
+        :param M: The matrix to check.
+        """
+        self.assert2NormClose(qconsts.ID2_SU2, M @ M.T.conj())
