@@ -1,5 +1,6 @@
 # Project-specific ignore rules
 qtoolkit/data
+docs/
 
 
 # Created by .ignore support plugin (hsz.mobi)
