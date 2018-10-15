@@ -3,7 +3,7 @@
 
 import unittest
 
-import tests.QTestCase as qtest
+import tests.qtestcase as qtest
 
 class #snakeToCamel(${NAME})TestCase(qtest.QTestCase):
     pass
