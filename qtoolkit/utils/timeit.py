@@ -85,4 +85,5 @@ class Timer:
         call to self.tic() and the call to self.toc(text).
         """
         end_time: int = time.time()
-        print("Task '{}' ended in {}s".format(text, end_time - self._time))
+        print("Task '{}' ended in {}s".format(text, end_time - self._time),
+              flush=True)
