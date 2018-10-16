@@ -54,3 +54,6 @@ HermitianMatrix = GenericMatrix
 SU2Matrix = GenericMatrix
 
 SO3Vector = numpy.ndarray
+SUdMatrix = GenericMatrix
+
+GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
