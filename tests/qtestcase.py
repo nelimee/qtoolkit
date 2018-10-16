@@ -43,7 +43,9 @@ import qtoolkit.utils.types as qtypes
 class QTestCase(unittest.TestCase):
     """Base class for all the tests of qtoolkit module."""
 
-    def assert2NormClose(self, array1, array2, rtol: float = 1e-5) -> None:
+    def assert2NormClose(self, array1: qtypes.GenericArray,
+                         array2: qtypes.GenericArray,
+                         rtol: float = 1e-5) -> None:
         """Check if the two arrays are close to each other.
 
         The check is performed by computing the 2-norm of their
@@ -98,3 +100,23 @@ class QTestCase(unittest.TestCase):
         :param M: The matrix to check.
         """
         self.assert2NormClose(qconsts.ID2_SU2, M @ M.T.conj())
+
+    def assertAllClose(self, A: qtypes.GenericArray, B: qtypes.GenericArray,
+                       rtol: float = 1e-5, atol: float = 1e-8) -> None:
+        """Check if the given arrays are equal or nearly equal.
+
+        :param A: First array to compare.
+        :param B: Second array to compare.
+        """
+        message = (f"Arrays A = \n{A}\nand B = \n{B}\nare not close enough!")
+        self.assertTrue(numpy.allclose(A, B, rtol=rtol, atol=atol), message)
+
+    def assertAllEqual(self, A: qtypes.GenericArray,
+                       B: qtypes.GenericArray) -> None:
+        """Check if the given arrays are equal.
+
+        :param A: First array to compare.
+        :param B: Second array to compare.
+        """
+        message = (f"Arrays A = \n{A}\nand B = \n{B}\nare not equal!")
+        self.assertTrue(numpy.all(A == B), message)
