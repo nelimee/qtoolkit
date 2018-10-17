@@ -33,7 +33,12 @@
 
 import unittest
 
+
+def get_all_test_suite() -> unittest.TestSuite:
+    return unittest.defaultTestLoader.discover('.', pattern="*.py")
+
+
 if __name__ == '__main__':
-    all_tests_suite = unittest.defaultTestLoader.discover('.', pattern="*.py")
+    all_tests_suite = get_all_test_suite()
     runner = unittest.TextTestRunner(verbosity=3)
     result = runner.run(all_tests_suite)
