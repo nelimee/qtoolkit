@@ -2,7 +2,7 @@
 
 # ======================================================================
 # Copyright CERFACS (October 2018)
-# Contributor: Adrien Suau (suau@cerfacs.fr)
+# Contributor: Adrien Suau (adrien.suau@cerfacs.fr)
 #
 # This software is governed by the CeCILL-B license under French law and
 # abiding  by the  rules of  distribution of free software. You can use,
