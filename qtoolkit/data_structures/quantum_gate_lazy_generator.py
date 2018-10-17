@@ -41,8 +41,8 @@ import qtoolkit.utils.types as qtypes
 
 class QuantumGateLazyGenerator:
 
-    def __init__(self, allowed_gates: typing.List[qtypes.SU2Matrix], depth: int,
-                 simplifiable_sequences: typing.Set[bytes],
+    def __init__(self, allowed_gates: typing.Sequence[qtypes.SU2Matrix],
+                 depth: int, simplifiable_sequences: typing.Set[bytes],
                  max_simplifiable_length: int = None) -> None:
         """Initialise a QuantumGateLazyGenerator instance.
 
