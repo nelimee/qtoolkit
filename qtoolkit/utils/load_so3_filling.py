@@ -34,7 +34,7 @@ import typing
 
 import numpy
 
-import qtoolkit.data_structures.quantum_gate_lazy_generator as seq_gen
+import qtoolkit.algorithms.quantum_gate_sequences_generator as seq_gen
 import qtoolkit.maths.matrix.su2.transformations as su2_trans
 import qtoolkit.utils.types as qtypes
 
@@ -78,13 +78,11 @@ def load_so3_filling(basis: typing.Sequence[qtypes.SU2Matrix], basis_str: str,
     if not os.path.isfile(npz_file):
         # If we did not computed the SO(3) vectors for the moment, compute
         # and save them.
-        lazy_trie = seq_gen.QuantumGateLazyGenerator(basis, depth,
-                                                     simplifiable_sequences)
 
         gate_sequences_indices = list()
         so3_vectors = list()
-        for gate_sequence, su2_matrix in \
-            lazy_trie.generate_all_possible_unitaries():
+        for gate_sequence, su2_matrix in seq_gen.generate_all_gate_sequences(
+            basis, depth, simplifiable_sequences):
             so3_vectors.append(su2_trans.su2_to_so3(su2_matrix))
             gate_sequences_indices.append(gate_sequence.copy())
 
