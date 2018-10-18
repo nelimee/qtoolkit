@@ -28,36 +28,3 @@
 # The fact that you  are presently reading this  means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
-
-"""Defines type hints for the qtoolkit project."""
-
-import typing
-
-import numpy
-import qiskit
-import scipy.sparse
-import sympy
-
-# Qiskit-related types
-QuantumGateParameter = typing.Union[float, int, complex, sympy.Basic]
-QuantumBit = typing.Tuple[qiskit.QuantumRegister, int]
-ClassicalBit = typing.Tuple[qiskit.ClassicalRegister, int]
-QuantumGateArgument = typing.Union[
-    qiskit.QuantumRegister, qiskit.ClassicalRegister, QuantumBit, ClassicalBit]
-# TODO: change this type name.
-QuantumInstructions = typing.Union[qiskit.QuantumCircuit, qiskit.CompositeGate]
-
-# Mathematical types
-GenericMatrix = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
-UnitaryMatrix = GenericMatrix
-HermitianMatrix = GenericMatrix
-SU2Matrix = GenericMatrix
-
-SO3Vector = numpy.ndarray
-SUdMatrix = GenericMatrix
-
-GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
-
-UnsignedIntegerType = typing.Union[
-    typing.Type[numpy.uint8], typing.Type[numpy.uint16], typing.Type[
-        numpy.uint32], typing.Type[numpy.uint64]]
