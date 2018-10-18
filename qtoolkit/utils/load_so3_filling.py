@@ -40,8 +40,8 @@ import qtoolkit.utils.types as qtypes
 
 
 def load_so3_filling(basis: typing.Sequence[qtypes.SU2Matrix], basis_str: str,
-                     depth: int, simplifiable_sequences: typing.Set[bytes]) -> \
-    typing.Tuple[numpy.ndarray, numpy.ndarray]:
+                     depth: int, simplifiable_sequences: typing.Iterable[
+        typing.Sequence[int]]) -> typing.Tuple[numpy.ndarray, numpy.ndarray]:
     """Getter for the SO(3) (or SU(2)) pre-computed sequences.
 
     :param basis: The basis used to compute gates.
@@ -49,8 +49,11 @@ def load_so3_filling(basis: typing.Sequence[qtypes.SU2Matrix], basis_str: str,
     to search for already-computed sequences in files and to save the
     computed sequences to a file.
     :param depth: The number of gates we want in our sequences.
-    :param simplifiable_sequences: A set of simplifications that can be
-    applied to sequences of gates in the provided basis.
+    :param simplifiable_sequences: A collection of simplifiable sequences. Each
+    simplifiable sequence is a sequence of indices each representing a matrix in
+    the given basis. If [0, 1, 0] is in simplifiable_sequence, this means that
+    basis[0] @ basis[1] @ basis[0] can be simplified to a shorter sequence of
+    gates from the basis.
     :return: Two numpy array of dimensions (N, 3) and (N, depth) with N
     the number of sequences generated.
     The first array stores the SO(3) vectors representing the quantum gates
