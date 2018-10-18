@@ -61,3 +61,6 @@ GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
 UnsignedIntegerType = typing.Union[
     typing.Type[numpy.uint8], typing.Type[numpy.uint16], typing.Type[
         numpy.uint32], typing.Type[numpy.uint64]]
+
+# Other types
+NearestNeighbourQueryable = typing.Any
