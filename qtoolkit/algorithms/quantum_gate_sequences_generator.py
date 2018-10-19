@@ -106,10 +106,11 @@ def generate_all_gate_sequences(basis: typing.Sequence[qtypes.SUdMatrix],
     #    3) saved_matrices[:current_depth+1] is valid and stores the matrix
     #  represented by the gate sequence current_gate_sequence[:current_depth+1].
     #    4) saved_matrices[current_depth+1:] is filled with zeros.
+    dim = basis[0].shape[0]
     current_depth = -1
     max_depth = depth - 1
     current_gate_sequence = numpy.zeros((depth,), dtype=gate_id_type)
-    saved_matrices = numpy.zeros((depth, 2, 2), dtype=numpy.complex)
+    saved_matrices = numpy.zeros((depth, dim, dim), dtype=numpy.complex)
 
     # 3. Do the tree traversal and yield a result at each leaf. Also yields
     #  at each node if include_nodes == True.
