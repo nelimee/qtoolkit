@@ -34,26 +34,36 @@ import typing
 
 import numpy
 
-import qtoolkit.data_structures.quantum_gate_lazy_generator as seq_gen
-import qtoolkit.maths.matrix.su2.transformations as su2_trans
+import qtoolkit.algorithms.quantum_gate_sequences_generator as sud_gen
 import qtoolkit.utils.types as qtypes
 
 
-def load_so3_filling(basis: typing.Sequence[qtypes.SU2Matrix], basis_str: str,
-                     depth: int, simplifiable_sequences: typing.Iterable[
-        typing.Sequence[int]]) -> typing.Tuple[numpy.ndarray, numpy.ndarray]:
-    """Getter for the SO(3) (or SU(2)) pre-computed sequences.
+def load_gate_sequences(basis: typing.Sequence[qtypes.SUdMatrix], depth: int,
+                        simplifiable_sequences: typing.Iterable[
+                            typing.Sequence[int]],
+                        basis_str: typing.Sequence[str] = None,
+                        include_nodes: bool = False) -> typing.Tuple[
+    numpy.ndarray, numpy.ndarray]:
+    """Getter for the SU(d) pre-computed sequences.
+
+    This function will try to load the sequences corresponding to the given
+    parameters from the qtoolkit/data/ directory. If the sequences are not
+    found within this directory, the function will compute the sequences, save
+    them in the directory for further reuse and return them to the caller.
 
     :param basis: The basis used to compute gates.
-    :param basis_str: A string representing the basis. This string is used
-    to search for already-computed sequences in files and to save the
-    computed sequences to a file.
+    :param basis_str: A list of string identifiers that will identify each gate
+    in the basis provided. If None, the function will not try to load the
+    sequences from a pre-computed file and will regenerate them.
     :param depth: The number of gates we want in our sequences.
     :param simplifiable_sequences: A collection of simplifiable sequences. Each
     simplifiable sequence is a sequence of indices each representing a matrix in
     the given basis. If [0, 1, 0] is in simplifiable_sequence, this means that
     basis[0] @ basis[1] @ basis[0] can be simplified to a shorter sequence of
     gates from the basis.
+    :param include_nodes: If False, only sequences of the specified depth are
+    generated. Else, all sequences of length between 1 and depth (inclusive) are
+    generated.
     :return: Two numpy array of dimensions (N, 3) and (N, depth) with N
     the number of sequences generated.
     The first array stores the SO(3) vectors representing the quantum gates
@@ -72,31 +82,40 @@ def load_so3_filling(basis: typing.Sequence[qtypes.SU2Matrix], basis_str: str,
     this_dir = os.path.dirname(os.path.realpath(__file__))
     parent_dir = os.path.join(this_dir, os.path.pardir)
     data_dir = os.path.realpath(os.path.join(parent_dir, "data"))
-    npz_file = os.path.join(data_dir, f"{basis_str}_{depth}.npz")
+
+    sud_matrices, gate_sequences = None, None
+
+    if basis_str is not None:
+        npz_file = os.path.join(data_dir, f"{'_'.join(basis_str)}_{depth}"
+                                          f"{'_wn' if include_nodes else 'nn'}"
+                                          f".npz")
+        if os.path.isfile(npz_file):
+            # If the SO(3) vectors were already computed, load them.
+            with numpy.load(npz_file) as data:
+                matrices = data["matrices"]
+                gate_sequences = data["gate_sequences"]
 
     # Construct the nearest neighbour structure
-    if not os.path.isfile(npz_file):
-        # If we did not computed the SO(3) vectors for the moment, compute
-        # and save them.
-        lazy_trie = seq_gen.QuantumGateLazyGenerator(basis, depth,
-                                                     simplifiable_sequences)
+    if sud_matrices is None or gate_sequences is None:
+        gate_id_type = numpy.uint8
+        if len(basis) > 2 ** 8 - 1:
+            gate_id_type = numpy.uint16
+        elif len(basis) > 2 ** 16 - 1:
+            gate_id_type = numpy.uint32
+        gate_sequences = list()
+        matrices = list()
+        for gate_sequence, matrix in sud_gen.generate_all_gate_sequences(basis,
+                                                                         depth,
+                                                                         simplifiable_sequences,
+                                                                         gate_id_type=gate_id_type,
+                                                                         include_nodes=include_nodes):
+            matrices.append(matrix.copy())
+            gate_sequences.append(gate_sequence.copy())
 
-        gate_sequences_indices = list()
-        so3_vectors = list()
-        for gate_sequence, su2_matrix in \
-            lazy_trie.generate_all_possible_unitaries():
-            so3_vectors.append(su2_trans.su2_to_so3(su2_matrix))
-            gate_sequences_indices.append(gate_sequence.copy())
+        matrices = numpy.array(matrices, dtype=float)
+        gate_sequences = numpy.array(gate_sequences, dtype=int)
+        if basis_str is not None:
+            numpy.savez(npz_file, matrices=matrices,
+                        gate_sequences=gate_sequences)
 
-        so3_vectors = numpy.array(so3_vectors, dtype=float)
-        gate_sequences_indices = numpy.array(gate_sequences_indices, dtype=int)
-        numpy.savez(npz_file, so3_vectors=so3_vectors,
-                    gate_sequences_indices=gate_sequences_indices)
-
-    else:
-        # If the SO(3) vectors were already computed, load them.
-        with numpy.load(npz_file) as data:
-            so3_vectors = data["so3_vectors"]
-            gate_sequences_indices = data["gate_sequences_indices"]
-
-    return so3_vectors, gate_sequences_indices
+    return matrices, gate_sequences
