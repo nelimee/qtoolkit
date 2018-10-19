@@ -34,64 +34,39 @@
 import typing
 
 import numpy
-import scipy.spatial
-import sklearn.neighbors
 
 import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.utils.types as qtypes
 
 
 class NearestNeighbourStructure:
-    """A generic and efficient data structure for nearest-neighbour requests.
+    """A generic and efficient data structure for nearest-neighbour requests."""
 
-    This class wraps several data structures that are used for efficient
-    nearest-neighbour searches. The wrapped data structures are:
-        1. scipy.spatial.cKDTree
-        2. sklearn.neighbors.KDTree
-        3. sklearn.neighbors.BallTree
-    """
-
-    def __init__(self, data: numpy.ndarray, method: str, leaf_size: int,
-                 sequences: typing.List[qgate_seq.QuantumGateSequence]) -> None:
+    def __init__(self, matrices: numpy.ndarray, gate_sequences: numpy.ndarray,
+                 basis: typing.Sequence[qtypes.SUdMatrix]) -> None:
         """Initialise the NNStructure instance.
 
-        :param data: An array of doubles with shape (n,m) storing the n data
-        points of dimension m to be indexed. This array is **not** copied,
-        modifications will result in bogus results.
-        :param method: Method used to index the data.
-        :param leaf_size: Below this size, a brute-force search is performed.
-        :param sequences: pre-computed quantum gate sequences.
+        :param matrices: An array with shape (n,m) storing the n data points of
+        dimension m to be indexed. This array is **not** copied, modifications
+        will result in bogus results.
         """
-        supported_methods = {"cKDTree", "sklKDTree", "sklBallTree"}
-        assert method in supported_methods
+        self._matrices = matrices
+        self._gate_sequences = gate_sequences
+        self._basis = basis
 
-        self._data = data
-        self._sequences = sequences
-
-        if method == "cKDTree":
-            self._internal_nn_structure = scipy.spatial.cKDTree(data, leaf_size)
-        elif method == "sklKDTree":
-            self._internal_nn_structure = sklearn.neighbors.KDTree(data,
-                                                                   leaf_size)
-        else:
-            self._internal_nn_structure = sklearn.neighbors.BallTree(data,
-                                                                     leaf_size)
-
-    def query(self, X: numpy.ndarray) -> typing.Tuple[
+    def query(self, x: numpy.ndarray) -> typing.Tuple[
         float, qgate_seq.QuantumGateSequence]:
         """Query the underlying data structure for nearest-neighbour of X.
 
-        :param X: The point we are searching an approximation for.
-        :return: The distance of the found approximation along with the
-        corresponding quantum gate sequence.
-        """
-        if isinstance(self._internal_nn_structure, (
-            sklearn.neighbors.kd_tree.KDTree,
-            sklearn.neighbors.ball_tree.BallTree)):
-            distance, index = self._internal_nn_structure.query(
-                X.reshape(1, -1))
-            dist, idx = distance[0, 0], index[0, 0]
-        else:
-            distance, index = self._internal_nn_structure.query(X)
-            dist, idx = distance, index
+        For the moment, this method performs a brute-force search.
 
-        return dist, self._sequences[idx]
+        :param x: The point we are searching an approximation for.
+        :return: The distance of the found approximation along with the
+        index of the approximation.
+        """
+        norms = numpy.linalg.norm(self._matrices - x, axis=(1, 2))
+        index = numpy.argmin(norms)
+        dist = norms[index]
+
+        return dist, qgate_seq.QuantumGateSequence(self._basis,
+                                                   self._gate_sequences[index])
