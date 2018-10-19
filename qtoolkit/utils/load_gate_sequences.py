@@ -112,7 +112,7 @@ def load_gate_sequences(basis: typing.Sequence[qtypes.SUdMatrix], depth: int,
             matrices.append(matrix.copy())
             gate_sequences.append(gate_sequence.copy())
 
-        matrices = numpy.array(matrices, dtype=float)
+        matrices = numpy.array(matrices, dtype=numpy.complex)
         gate_sequences = numpy.array(gate_sequences, dtype=int)
         if basis_str is not None:
             numpy.savez(npz_file, matrices=matrices,
