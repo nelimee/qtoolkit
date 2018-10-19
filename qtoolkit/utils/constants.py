@@ -68,6 +68,9 @@ H = numpy.array([[1, 1], [1, -1]], dtype=numpy.complex) / numpy.sqrt(2)
 S = numpy.array([[1, 0], [0, 1.j]], dtype=numpy.complex)
 T = numpy.array([[1, 0], [0, numpy.exp(1.j * numpy.pi / 4)]],
                 dtype=numpy.complex)
+CX = numpy.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
+                 dtype=numpy.complex)
+
 # Quantum gates in SU(2)
 X_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(X))
 Y_SU2 = Y / numpy.lib.scimath.sqrt(numpy.linalg.det(Y))
@@ -75,3 +78,5 @@ Z_SU2 = Z / numpy.lib.scimath.sqrt(numpy.linalg.det(Z))
 H_SU2 = H / numpy.lib.scimath.sqrt(numpy.linalg.det(H))
 S_SU2 = S / numpy.lib.scimath.sqrt(numpy.linalg.det(S))
 T_SU2 = T / numpy.lib.scimath.sqrt(numpy.linalg.det(T))
+CX_SU2 = CX / numpy.lib.scimath.sqrt(
+    numpy.lib.scimath.sqrt(numpy.linalg.det(CX)))
