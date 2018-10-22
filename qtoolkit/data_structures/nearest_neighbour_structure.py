@@ -36,6 +36,7 @@ import typing
 import numpy
 
 import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.maths.matrix.distances as qdists
 import qtoolkit.utils.types as qtypes
 
 
@@ -64,9 +65,10 @@ class NearestNeighbourStructure:
         :return: The distance of the found approximation along with the
         index of the approximation.
         """
-        norms = numpy.linalg.norm(self._matrices - x, axis=(1, 2))
-        index = numpy.argmin(norms)
-        dist = norms[index]
+        distances = qdists.fowler_distances(self._matrices, x)
+        # distances = numpy.linalg.norm(self._matrices - x, axis=(1, 2))
+        index = numpy.argmin(distances)
+        dist = distances[index]
 
         return dist, qgate_seq.QuantumGateSequence(self._basis,
                                                    self._gate_sequences[index])
