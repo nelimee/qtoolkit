@@ -83,7 +83,7 @@ def load_gate_sequences(basis: typing.Sequence[qtypes.SUdMatrix], depth: int,
     parent_dir = os.path.join(this_dir, os.path.pardir)
     data_dir = os.path.realpath(os.path.join(parent_dir, "data"))
 
-    sud_matrices, gate_sequences = None, None
+    matrices, gate_sequences = None, None
 
     if basis_str is not None:
         npz_file = os.path.join(data_dir, f"{'_'.join(basis_str)}_{depth}"
@@ -96,7 +96,7 @@ def load_gate_sequences(basis: typing.Sequence[qtypes.SUdMatrix], depth: int,
                 gate_sequences = data["gate_sequences"]
 
     # Construct the nearest neighbour structure
-    if sud_matrices is None or gate_sequences is None:
+    if matrices is None or gate_sequences is None:
         gate_id_type = numpy.uint8
         if len(basis) > 2 ** 8 - 1:
             gate_id_type = numpy.uint16
@@ -113,7 +113,7 @@ def load_gate_sequences(basis: typing.Sequence[qtypes.SUdMatrix], depth: int,
             gate_sequences.append(gate_sequence.copy())
 
         matrices = numpy.array(matrices, dtype=numpy.complex)
-        gate_sequences = numpy.array(gate_sequences, dtype=int)
+        gate_sequences = numpy.array(gate_sequences)
         if basis_str is not None:
             numpy.savez(npz_file, matrices=matrices,
                         gate_sequences=gate_sequences)
