@@ -53,6 +53,29 @@ def fowler_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
     return numpy.sqrt(numpy.abs(dimension - trace) / dimension)
 
 
+def fowler_distances(A: numpy.ndarray,
+                     B: qtypes.UnitaryMatrix) -> numpy.ndarray:
+    """Computes the Fowler distances between each A[i] and B.
+
+    This method is an optimised version of
+        N = A.shape[0]
+        distances = []
+        for i in range(N):
+            distances.append(fowler_distance(A[i], B))
+        return numpy.array(distances)
+
+    :param A: a 3-dimensional array of dimensions (N, m, m) with N the number
+    of unitary matrices of size (m, m) to process.
+    :param B: a unitary matrix of size (m, m).
+    :return: a 1-dimensional array of size N containing the fowler distances
+    between A[i] and B for 0 <= i < N.
+    """
+    dimension = B.shape[0]
+    products = numpy.transpose(A, axes=(0, 2, 1)).conj() @ B
+    traces = numpy.trace(products, axis1=1, axis2=2)
+    return numpy.sqrt(numpy.abs(dimension - traces) / dimension)
+
+
 def trace_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
     """Computes the trace distance between A and B.
 
