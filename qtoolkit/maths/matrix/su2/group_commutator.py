@@ -40,16 +40,17 @@ import qtoolkit.maths.matrix.su2.transformations as su2trans
 import qtoolkit.utils.types as qtypes
 
 
-def su2_group_commutator_decompose(unitary: qtypes.SU2Matrix) -> typing.Tuple[
+def su2_group_commutator_decompose(matrix: qtypes.UnitaryMatrix) -> \
+typing.Tuple[
     qtypes.SU2Matrix, qtypes.SU2Matrix]:
     """Finds V,W such that U = V @ W @ V.T.conj() @ W.T.conj().
 
-    :param unitary: The unitary matrix to decompose.
+    :param matrix: The unitary matrix to decompose.
     :return: A tuple containing (V, W).
     """
     # unitary is a rotation of a unknown angle $\theta$ about some unknown
     # axis. Here, we find the angle $\theta$.
-    cart3_unitary = su2trans.su2_to_so3(unitary)
+    cart3_unitary = su2trans.su2_to_so3(matrix)
     theta = numpy.linalg.norm(cart3_unitary, 2)
 
     # Then, we construct the matrix that consist of a rotation of $\theta$
@@ -57,7 +58,7 @@ def su2_group_commutator_decompose(unitary: qtypes.SU2Matrix) -> typing.Tuple[
     X_unitary = su2trans.so3_to_su2(numpy.array([theta, 0.0, 0.0]))
     # We find the similarity matrix between the original unitary and the
     # rotation about the X-axis we just created.
-    S = sim_matrix.similarity_matrix(unitary, X_unitary)
+    S = sim_matrix.similarity_matrix(matrix, X_unitary)
 
     # Now we perform the real computations to find V and W, but we perform
     # them on the unitary rotating about the X-axis and not on the
