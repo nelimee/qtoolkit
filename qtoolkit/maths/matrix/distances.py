@@ -31,10 +31,13 @@
 
 """Implements several distances."""
 
+import typing
+
 import numpy
 import scipy
 
 import qtoolkit.utils.types as qtypes
+from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 
 def fowler_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
@@ -99,3 +102,47 @@ def operator_norm(U: qtypes.UnitaryMatrix) -> float:
     """
     eigenvalues = scipy.linalg.eigvals(U)
     return numpy.max(numpy.abs(eigenvalues))
+
+
+def trace_fidelity(unitary_reference: qtypes.UnitaryMatrix,
+                   unitary: qtypes.UnitaryMatrix) -> float:
+    """Compute the trace fidelity as explained in the GLOA article.
+
+    The GLOA article is: https://arxiv.org/abs/1004.2242.
+
+    :param unitary_reference: The reference unitary.
+    :param unitary: The unitary matrix proposed to approximate
+    unitary_reference.
+    :return: The trace distance between the 2 unitary matrices.
+    """
+    N = unitary_reference.shape[0]
+    return numpy.abs(numpy.trace(unitary_reference @ unitary.T.conj())) / N
+
+
+def gloa_fidelity(gate_sequence: QuantumGateSequence,
+                  objective_unitary: qtypes.UnitaryMatrix,
+                  correctness_weight: float, circuit_cost_weight: float,
+                  circuit_cost_func: typing.Callable[
+                      [QuantumGateSequence], float]) -> float:
+    """Compute the fidelity measure presented in the GLOA article.
+
+    The GLOA article is: https://arxiv.org/abs/1004.2242.
+
+    :param gate_sequence: the sequence of quantum gate that is candidate to
+    approximate the objective_unitary matrix.
+    :param objective_unitary: The unitary matrix we are searching an
+    approximation for.
+    :param correctness_weight: importance of the correctness of the circuit
+    in the fidelity measure. Corresponds to the parameter alpha in the
+    original paper.
+    :param circuit_cost_weight: importance of the circuit cost in the
+    fidelity measure. Corresponds to the parameter beta in the original
+    paper.
+    :param circuit_cost_func: a function that will associate a cost to a given
+    sequence of quantum gates.
+    :return: the fidelity of the approximation.
+    """
+    correctness = correctness_weight * trace_fidelity(gate_sequence.matrix,
+                                                      objective_unitary)
+    circuit_cost = circuit_cost_weight / circuit_cost_func(gate_sequence)
+    return numpy.abs(1 - (correctness + circuit_cost))
