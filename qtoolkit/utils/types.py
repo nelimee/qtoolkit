@@ -40,6 +40,9 @@ import sympy
 
 # Qiskit-related types
 QuantumGateParameter = typing.Union[float, int, complex, sympy.Basic]
+GateParameterTransformation = typing.Callable[
+    [QuantumGateParameter], QuantumGateParameter]
+
 QuantumBit = typing.Tuple[qiskit.QuantumRegister, int]
 ClassicalBit = typing.Tuple[qiskit.ClassicalRegister, int]
 QuantumGateArgument = typing.Union[
