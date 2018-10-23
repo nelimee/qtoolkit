@@ -40,6 +40,9 @@ import sympy
 
 # Qiskit-related types
 QuantumGateParameter = typing.Union[float, int, complex, sympy.Basic]
+GateParameterTransformation = typing.Callable[
+    [QuantumGateParameter], QuantumGateParameter]
+
 QuantumBit = typing.Tuple[qiskit.QuantumRegister, int]
 ClassicalBit = typing.Tuple[qiskit.ClassicalRegister, int]
 QuantumGateArgument = typing.Union[
@@ -55,6 +58,9 @@ SU2Matrix = GenericMatrix
 
 SO3Vector = numpy.ndarray
 SUdMatrix = GenericMatrix
+
+SUdMatrixGenerator = typing.Union[
+    SUdMatrix, typing.Callable[[float], SUdMatrix]]
 
 GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
 

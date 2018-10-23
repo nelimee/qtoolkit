@@ -36,7 +36,7 @@ It behaves like a numpy matrix, but also stores the sequence of quantum gates
 that produced the matrix.
 """
 
-import typing
+from typing import Optional, Sequence, List
 
 import numpy
 
@@ -45,154 +45,115 @@ import qtoolkit.utils.types as qtypes
 
 class QuantumGateSequence:
 
-    def __init__(self, basis: typing.Sequence[qtypes.SUdMatrix],
-                 gate_sequence: numpy.ndarray, inverses: numpy.ndarray = None,
-                 resulting_matrix: qtypes.SUdMatrix = None) -> None:
-        """Initialise QuantumGateSequence instances.
-
-        :param basis: List of quantum gates that are combined to produce the
-        resulting matrix.
-        :param gate_sequence: List of indices that represent the sequence of
-        quantum gates from the basis that compose the resulting matrix.
-        :param inverses: Array of integers mapping each gate in the given basis
-        to its inverse in the same basis. inverses[i] = j means that
-        basis[i] @ basis[j] = basis[j] @ basis[i] = I.
-        :param resulting_matrix: The resulting matrix. If not None, the given
-        matrix is assumed to be correct and is not checked. If None, the matrix
-        is re-computed lazily from the basis and the gate_sequence inputs.
+    def __init__(self, basis: Sequence[qtypes.SUdMatrixGenerator],
+                 sequence: numpy.ndarray,
+                 parameters: Optional[numpy.ndarray] = None,
+                 resulting_matrix: qtypes.SUdMatrix = None,
+                 dimension: int = None) -> None:
         """
-        # The basis needs to contain at least 2 elements.
-        assert len(basis) >= 2
 
-        # Storing constants in the instance.
-        self._d = basis[0].shape[0]
-
-        # Storing the provided parameters.
+        :param basis:
+        :param sequence:
+        :param parameters:
+        :param resulting_matrix:
+        :param dimension:
+        """
         self._basis = basis
-        self._gate_sequence = gate_sequence.copy()
-        if resulting_matrix is None:
-            self._matrix = None
+        self._sequence = sequence
+        self._parameters = parameters or numpy.zeros((len(sequence),),
+                                                     dtype=numpy.float)
+        self._resulting_matrix = resulting_matrix
+        if dimension is not None:
+            self._dim = dimension
+        elif resulting_matrix is not None:
+            self._dim = resulting_matrix.shape[0]
         else:
-            self._matrix = resulting_matrix.copy()
+            self._dim = self._get_sud_matrix(0).shape[0]
 
-        if inverses is None:
-            self._inverses = None
+    def _get_sud_matrix(self, gate_position: int) -> qtypes.SUdMatrix:
+        if callable(self._basis[self._sequence[gate_position]]):
+            return self._basis[self._sequence[gate_position]](
+                self._parameters[gate_position])
         else:
-            self._inverses = inverses
+            return self._basis[self._sequence[gate_position]]
 
     @property
-    def matrix(self):
-        """Computes if necessary and returns the matrix represented.
-
-        The matrix represented is computed only once and then stored for
-        further re-use.
-
-        :return: the represented matrix.
-        """
-        if self._matrix is None:
-            self._matrix = self._basis[self._gate_sequence[0]]
-            for idx in self._gate_sequence[1:]:
-                self._matrix = self._matrix @ self._basis[idx]
-        return self._matrix
+    def matrix(self) -> qtypes.UnitaryMatrix:
+        if self._resulting_matrix is None:
+            self._resulting_matrix = self._get_sud_matrix(0)
+            for gate_position in range(1, len(self._sequence)):
+                self._resulting_matrix = self._resulting_matrix @ \
+                                         self._get_sud_matrix(
+                    gate_position)
+        return self._resulting_matrix
 
     @property
-    def gates(self):
-        """Getter for the underlying gate sequence."""
-        return self._gate_sequence
+    def gates(self) -> numpy.ndarray:
+        return self._sequence
 
     @property
-    def inverses(self):
-        """Getter for the inverses."""
-        if self._inverses is None:
-            self._compute_inverses()
-        return self._inverses
+    def dim(self) -> int:
+        return self._dim
 
     @property
-    def dimension(self):
-        """Getter for the dimension of the current QuantumGateSequence."""
-        return self._d
+    def params(self) -> Optional[List[Optional[qtypes.QuantumGateParameter]]]:
+        return self._parameters
 
-    def inverse(self) -> 'QuantumGateSequence':
-        """Inverse the quantum gate sequence.
-
-        Inverting the quantum gate sequence is done by inverting each gate
-        in the sequence separately and then apply those inverses in reverse
-        order.
-
-        :return: A new quantum gate sequence representing the inverse.
-        """
-        self._compute_inverses()
-
-        # Inverting a matrix is O(n^3), which is the same as the complexity
-        # of multiplying a matrix by another matrix. So we perform the
-        # inversion now if the matrix is available
-        if self._matrix is not None:
-            resulting_matrix = numpy.linalg.inv(self._matrix)
-        else:
-            resulting_matrix = None
-        # We return a new QuantumGateSequence representing the self.inverse().
-        return QuantumGateSequence(self._basis,
-                                   self._inverses[self._gate_sequence][::-1],
-                                   self._inverses,
-                                   resulting_matrix=resulting_matrix)
-
-    def _compute_inverses(self) -> None:
-        """Find the inverse of each gate in the provided basis and store them.
-
-        The inverses should be themselves in the basis! Moreover, if the
-        inverses have already been computed, this function does nothing.
-        Inverses are stored in a vector whose structure is presented in
-        the parameter documentation of the __init__ method.
-        """
-        IDENTITY = numpy.identity(self.dimension, dtype=complex)
-        if self._inverses is not None and self._basis_contains_inverses():
-            return
-        # Compute which gate is the inverse of which one in the basis.
-        self._inverses = numpy.zeros((len(self._basis),), dtype=numpy.int) - 1
-        for idx, gate in enumerate(self._basis):
-            # If we don't know the inverse of this gate
-            if self._inverses[idx] == -1:
-                for jdx, possible_inverse in enumerate(self._basis):
-                    if numpy.allclose(IDENTITY, gate @ possible_inverse):
-                        self._inverses[idx] = jdx
-                        self._inverses[jdx] = idx
-        self._check_basis_contains_inverses()
-
-    def _basis_contains_inverses(self) -> bool:
-        """Check if each gate in the basis has its inverse in the basis.
-
-        This method should not be called before _compute_inverses.
-        """
-        return numpy.all(self._inverses != -1)
-
-    def _check_basis_contains_inverses(self):
-        """Check if each gate in the basis has its inverse in the basis.
-
-        :raise RuntimeError: if there is a gate that does not have its
-        inverse in the basis.
-
-        This method should not be called before _compute_inverses.
-        """
-        if not self._basis_contains_inverses():
-            raise RuntimeError("The basis provided is not complete. Each gate"
-                               " should have its inverse in the basis.")
+    @params.setter
+    def params(self, value) -> None:
+        self._parameters = value
 
     def __matmul__(self, other: 'QuantumGateSequence') -> 'QuantumGateSequence':
-        """Wrapper around the numpy.ndarray.__matmul__ function.
+        if self._resulting_matrix is None and other._resulting_matrix is None:
+            matrix = None
+        else:
+            # If at least one of the two matrices has already been computed then
+            # it is more efficient to compute the other matrix.
+            matrix = self.matrix @ other.matrix
 
-        :param other: An other QuantumGateSequence.
-        :return: The QuantumGateSequence resulting of the matrix multiplication
-        between self and other.
-        """
-        # Checking that the basis are the same.
-        # This is non-negligible in terms of computation time for the
-        # Solovay-Kitaev algorithm, so I remove it for the moment.
-        # assert len(self._basis) == len(other._basis)
-        # for self_basis_gate, other_basis_gate in zip(self._basis,
-        # other._basis):
-        #     assert numpy.allclose(self_basis_gate, other_basis_gate)
+        sequence = numpy.concatenate((self._sequence, other._sequence))
+        parameters = numpy.concatenate((self.params, other.params))
+        return QuantumGateSequence(self._basis, sequence, parameters, matrix,
+                                   self._dim)
 
-        # Returning the result:
-        return QuantumGateSequence(self._basis, numpy.concatenate(
-            (self._gate_sequence, other._gate_sequence)), self._inverses,
-                                   self.matrix @ other.matrix)
+
+class InvertibleQuantumGateSequence(QuantumGateSequence):
+
+    def __init__(self, basis: Sequence[qtypes.SUdMatrixGenerator],
+                 sequence: numpy.ndarray, inverses: Optional[numpy.ndarray],
+                 parameters: Optional[numpy.ndarray] = None,
+                 inverse_parameters: Optional[Sequence[
+                     Optional[qtypes.GateParameterTransformation]]] = None,
+                 resulting_matrix: qtypes.SUdMatrix = None,
+                 dimension: int = None) -> None:
+        super().__init__(basis, sequence, parameters, resulting_matrix,
+                         dimension)
+        self._inverses = inverses
+
+        def do_nothing(x: qtypes.QuantumGateParameter):
+            return x
+
+        self._inverse_parameters = [inv or do_nothing for inv in
+                                    inverse_parameters]
+
+    @property
+    def H(self) -> 'InvertibleQuantumGateSequence':
+        inverted_parameters = [self._inverse_parameters[i](param) for i, param
+                               in enumerate(reversed(self._parameters))]
+        inverted_sequence = self._inverses[self._sequence][::-1]
+        return InvertibleQuantumGateSequence(self._basis, inverted_sequence,
+                                             self._inverses,
+                                             numpy.array(inverted_parameters),
+                                             self._inverse_parameters,
+                                             self._resulting_matrix.T.conj(),
+                                             self._dim)
+
+    def __matmul__(self,
+                   other: 'InvertibleQuantumGateSequence') -> \
+        'InvertibleQuantumGateSequence':
+        # Using super().__matmul__().
+        res = self @ other
+        return InvertibleQuantumGateSequence(self._basis, res.gates,
+                                             self._inverses, res.params,
+                                             self._inverse_parameters,
+                                             res._resulting_matrix, self.dim)
