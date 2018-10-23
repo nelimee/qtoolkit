@@ -36,7 +36,7 @@ import unittest
 import numpy
 
 import qtoolkit.data_structures.nearest_neighbour_structure as NNstruct
-import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.data_structures.quantum_gate_sequence_old as qgate_seq
 import qtoolkit.maths.matrix.generation.su2 as gen_su2
 import qtoolkit.maths.matrix.su2.transformations as su2_trans
 import qtoolkit.utils.constants as qconsts

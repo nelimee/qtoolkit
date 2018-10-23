@@ -30,7 +30,7 @@
 # ======================================================================
 
 import qtoolkit.data_structures.nearest_neighbour_structure as nn_struct
-import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.data_structures.quantum_gate_sequence_old as qgate_seq
 import qtoolkit.maths.matrix.su2.group_commutator as su2_gc
 import qtoolkit.maths.matrix.sud.group_commutator as sud_gc
 import qtoolkit.utils.types as qtypes

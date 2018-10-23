@@ -35,7 +35,7 @@ import typing
 
 import numpy
 
-import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.data_structures.quantum_gate_sequence_old as qgate_seq
 import qtoolkit.maths.matrix.distances as qdists
 import qtoolkit.utils.types as qtypes
 

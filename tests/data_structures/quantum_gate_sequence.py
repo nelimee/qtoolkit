@@ -35,7 +35,7 @@ import unittest
 
 import numpy
 
-import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.data_structures.quantum_gate_sequence_old as qgate_seq
 import qtoolkit.utils.constants as qconsts
 import tests.qtestcase as qtest
 
