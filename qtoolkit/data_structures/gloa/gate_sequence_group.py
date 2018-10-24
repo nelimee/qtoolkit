@@ -66,7 +66,9 @@ class GateSequenceGroup:
         self._basis = basis
         self._current_leader: QuantumGateSequence = None
         self._r = r
-        self._param_bounds = parameters_bounds or numpy.zeros((2, len(basis)))
+        self._param_bounds = parameters_bounds
+        if self._param_bounds is None:
+            self._param_bounds = numpy.zeros((2, length))
         self._correctness_weight = correctness_weight
         self._circuit_cost_weight = circuit_cost_weight
         self._circuit_cost_func = circuit_cost_func
