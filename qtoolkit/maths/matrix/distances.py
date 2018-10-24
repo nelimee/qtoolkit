@@ -103,46 +103,37 @@ def operator_norm(U: qtypes.UnitaryMatrix) -> float:
     return numpy.max(numpy.abs(eigenvalues))
 
 
-def trace_fidelity(unitary_reference: qtypes.UnitaryMatrix,
-                   unitary: qtypes.UnitaryMatrix) -> float:
-    """Compute the trace fidelity as explained in the GLOA article.
+def gloa_objective_function(gate_sequence: QuantumGateSequence,
+                            objective_unitary: qtypes.UnitaryMatrix,
+                            correctness_weight: float,
+                            circuit_cost_weight: float,
+                            circuit_cost_func: typing.Callable[
+                                [QuantumGateSequence], float]) -> float:
+    """Compute a modified GLOA objective function.
 
     The GLOA article is: https://arxiv.org/abs/1004.2242.
-
-    :param unitary_reference: The reference unitary.
-    :param unitary: The unitary matrix proposed to approximate
-    unitary_reference.
-    :return: The trace distance between the 2 unitary matrices.
-    """
-    N = unitary_reference.shape[0]
-    return numpy.abs(
-        numpy.trace(numpy.real(unitary_reference @ unitary.T.conj()))) / N
-
-
-def gloa_fidelity(gate_sequence: QuantumGateSequence,
-                  objective_unitary: qtypes.UnitaryMatrix,
-                  correctness_weight: float, circuit_cost_weight: float,
-                  circuit_cost_func: typing.Callable[
-                      [QuantumGateSequence], float]) -> float:
-    """Compute the fidelity measure presented in the GLOA article.
-
-    The GLOA article is: https://arxiv.org/abs/1004.2242.
+    This objective function has been modified because the one presented in the
+    GLOA article may make the algorithm converge to a matrix M such that
+    objective_unitary @ M.T.conj() = - Id. This new objective function
+    prevent this problem.
 
     :param gate_sequence: the sequence of quantum gate that is candidate to
     approximate the objective_unitary matrix.
-    :param objective_unitary: The unitary matrix we are searching an
+    :param objective_unitary: the unitary matrix we are searching an
     approximation for.
     :param correctness_weight: importance of the correctness of the circuit
-    in the fidelity measure. Corresponds to the parameter alpha in the
+    in the objective function. Corresponds to the parameter alpha in the
     original paper.
     :param circuit_cost_weight: importance of the circuit cost in the
-    fidelity measure. Corresponds to the parameter beta in the original
+    objective function. Corresponds to the parameter beta in the original
     paper.
     :param circuit_cost_func: a function that will associate a cost to a given
     sequence of quantum gates.
     :return: the fidelity of the approximation.
     """
-    correctness = correctness_weight * trace_fidelity(gate_sequence.matrix,
-                                                      objective_unitary)
+    N = objective_unitary.shape[0]
+    UUT = objective_unitary @ gate_sequence.matrix.T.conj()
+    trace_fidelity = (1 + numpy.trace(UUT) / N) / 2
+    correctness = correctness_weight * trace_fidelity
     circuit_cost = circuit_cost_weight / circuit_cost_func(gate_sequence)
-    return numpy.abs(correctness + circuit_cost)
+    return numpy.abs(1 - (correctness + circuit_cost))
