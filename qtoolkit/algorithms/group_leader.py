@@ -47,8 +47,8 @@ from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 def group_leader(unitary: qtypes.UnitaryMatrix, length: int, p: int, n: int,
                  basis: typing.Sequence[qtypes.SUdMatrixGenerator],
-                 parameters_bound: typing.Optional[
-                     numpy.ndarray] = None) -> QuantumGateSequence:
+                 parameters_bound: typing.Optional[numpy.ndarray] = None,
+                 max_iter: int = 100) -> QuantumGateSequence:
     """Implementation of the Group Leader Optimisation Algorithm.
 
     See https://arxiv.org/abs/1004.2242 for details about the algorithm.
@@ -68,7 +68,7 @@ def group_leader(unitary: qtypes.UnitaryMatrix, length: int, p: int, n: int,
     population = GateSequencePopulation(basis, unitary, length, n, p, r,
                                         correctness_weight, circuit_cost_weight,
                                         circuit_cost_func, parameters_bound)
-    for i in range(100):
+    for i in range(max_iter):
         population.perform_mutation_and_recombination()
         population.perform_one_way_crossover()
 
