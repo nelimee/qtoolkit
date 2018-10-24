@@ -56,6 +56,8 @@ SU2Matrix = GenericMatrix
 SO3Vector = numpy.ndarray
 SUdMatrix = GenericMatrix
 
+SUMatrix = GenericMatrix
+
 GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
 
 UnsignedIntegerType = typing.Union[
