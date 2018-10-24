@@ -45,31 +45,64 @@ from qtoolkit.data_structures.gloa.gate_sequence_population import \
 from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 
-def group_leader(unitary: qtypes.UnitaryMatrix, length: int, p: int, n: int,
-                 basis: typing.Sequence[qtypes.SUdMatrixGenerator],
+def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
+                 basis: typing.Sequence[qtypes.SUdMatrixGenerator], n: int = 15,
+                 p: int = 25,
                  parameters_bound: typing.Optional[numpy.ndarray] = None,
-                 max_iter: int = 100) -> QuantumGateSequence:
-    """Implementation of the Group Leader Optimisation Algorithm.
+                 max_iter: int = 100, r: numpy.ndarray = None,
+                 correctness_weight: float = 0.9,
+                 circuit_cost_weight: float = 0.1,
+                 circuit_cost_func: typing.Callable[
+                     [QuantumGateSequence], float] = None) -> typing.Tuple[
+    float, QuantumGateSequence]:
+    """Implementation of the Group Leader Optimisation algorithm.
 
-    See https://arxiv.org/abs/1004.2242 for details about the algorithm.
+    The article presenting this algorithm can be found at
+    https://arxiv.org/abs/1004.2242.
 
-    :param unitary: A unitary matrix representing a quantum gate (or
-    circuit) to decompose.
-    :param basis: The basis used for the decomposition.
-    :param length: Length of the generated sequences.
-    :param parameters_bound: Bounds for the parameters of the basis gates.
-    :return:
+    :param unitary: unitary matrix we want to approximate.
+    :param length: length of the resulting approximation sequence.
+    :param basis: gates available to construct the approximation. Each gate can
+    be either a numpy.ndarray (which means that the gate is not parametrised) or
+    a callable that takes a float as input and returns a numpy.ndarray
+    representing the quantum gate.
+    :param n: number of groups.
+    :param p: number of members in each group.
+    :param parameters_bound: bounds for the parameter of the quantum gates in
+    the basis. If None, this means that no quantum gate in the basis is
+    parametrised. If not all the quantum gates in the basis are parametrised,
+    the parameter bounds corresponding to non-parametrised quantum gates can
+    take any value.
+    :param max_iter: maximum number of iteration performed by the algorithm.
+    :param r: rates determining the portion of old (r[0]), leader (r[1]) and
+    random (r[2]) that are used to generate new candidates. If None, the default
+    value of the GLOA article is used: r = [0.8, 0.1, 0.1].
+    :param correctness_weight: scalar representing the importance attached to
+    the correctness of the generated circuit.
+    :param circuit_cost_weight: scalar representing the importance attached to
+    the cost of the generated circuit.
+    :param circuit_cost_func: a function that takes as input an instance of
+    QuantumGateSequence and returns a float representing the cost of the given
+    circuit. If None, only the correctness will count and the circuit cost will
+    be ignored.
+    :return: the best QuantumGateSequence found to approximate the given unitary
+    matrix.
     """
-    r = numpy.array([0.8, 0.1, 0.1])
-    correctness_weight = 1
-    circuit_cost_weight = 0
-    circuit_cost_func = lambda x: 1
+    if r is None:
+        r = numpy.array([0.8, 0.1, 0.1])
+    if circuit_cost_func is None:
+        circuit_cost_weight = 0.0
+        correctness_weight = 1.0
+
+        def circuit_cost_func(_: QuantumGateSequence) -> float:
+            return 1.0
 
     population = GateSequencePopulation(basis, unitary, length, n, p, r,
                                         correctness_weight, circuit_cost_weight,
                                         circuit_cost_func, parameters_bound)
     for i in range(max_iter):
+        print(f"Iteration n°{i}/{max_iter}...", end=' ')
         population.perform_mutation_and_recombination()
         population.perform_one_way_crossover()
-
+        print(f"[{population.get_leader()[0]}]")
     return population.get_leader()
