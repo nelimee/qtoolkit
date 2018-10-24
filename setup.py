@@ -229,4 +229,4 @@ setup(  # This is the name of your project. The first time you publish this
     },
 
     # Specify the test suite to use when "python setup.py test" is called.
-    test_suite='tests.launch_all_tests.get_all_test_suite')
+    test_suite='tests')

@@ -1,0 +1,27 @@
+# The project has been developed with Python 3.6, we force Python 3.6 in order
+# to have the same behaviour
+image: python:3.6
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache"
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/reference/pip_install/#caching
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+  - .cache/pip
+  - venv/
+
+before_script:
+- python -V                # Print out python version for debugging
+- python -m venv venv      # Create virtualenv
+- source venv/bin/activate # Activate the virtualenv
+
+test:
+  script:
+  - python setup.py test
