@@ -115,7 +115,8 @@ def trace_fidelity(unitary_reference: qtypes.UnitaryMatrix,
     :return: The trace distance between the 2 unitary matrices.
     """
     N = unitary_reference.shape[0]
-    return numpy.abs(numpy.trace(unitary_reference @ unitary.T.conj())) / N
+    return numpy.abs(
+        numpy.trace(numpy.real(unitary_reference @ unitary.T.conj()))) / N
 
 
 def gloa_fidelity(gate_sequence: QuantumGateSequence,
@@ -144,4 +145,4 @@ def gloa_fidelity(gate_sequence: QuantumGateSequence,
     correctness = correctness_weight * trace_fidelity(gate_sequence.matrix,
                                                       objective_unitary)
     circuit_cost = circuit_cost_weight / circuit_cost_func(gate_sequence)
-    return numpy.abs(1 - (correctness + circuit_cost))
+    return numpy.abs(correctness + circuit_cost)
