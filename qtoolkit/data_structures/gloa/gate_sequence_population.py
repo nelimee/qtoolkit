@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Implement the GateSequencePopulation class, used to implement GLOA."""
+
 import typing
 
 import numpy
@@ -40,25 +42,58 @@ from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 
 class GateSequencePopulation:
+    """A data structure containing several GateSequenceGroup instances."""
 
     def __init__(self, basis: typing.Sequence[qtypes.SUdMatrixGenerator],
-                 unitary: qtypes.UnitaryMatrix, length: int, n: int, p: int,
-                 r: numpy.ndarray, correctness_weight: float,
+                 objective_unitary: qtypes.UnitaryMatrix, length: int, n: int,
+                 p: int, r: numpy.ndarray, correctness_weight: float,
                  circuit_cost_weight: float, circuit_cost_func: typing.Callable[
             [QuantumGateSequence], float], parameters_bounds: typing.Optional[
             numpy.ndarray] = None) -> None:
+        """Initialise the GateSequencePopulation instance.
+
+        :param basis: gates available to construct the approximation. Each gate
+        can be either a numpy.ndarray (which means that the gate is not
+        parametrised) or a callable that takes a float as input and returns a
+        numpy.ndarray representing the quantum gate.
+        :param objective_unitary: unitary matrix we are trying to approximate.
+        :param length: length of the sequences that will be generated in each
+        group.
+        :param n: number of groups.
+        :param p: population of each group, i.e. number of gate sequences
+        contained in each group.
+        :param r: rates determining the portion of old (r[0]), leader (r[1]) and
+        random (r[2]) that are used to generate new candidates.
+        :param correctness_weight: scalar representing the importance attached
+        to the correctness of the generated circuit.
+        :param circuit_cost_weight: scalar representing the importance attached
+        to the cost of the generated circuit.
+        :param circuit_cost_func: a function that takes as input an instance of
+        QuantumGateSequence and returns a float representing the cost of the
+        given circuit.
+        :param parameters_bounds: bounds for the parameter of the quantum gates
+        in the basis. If None, this means that no quantum gate in the basis is
+        parametrised. If not all the quantum gates in the basis are
+        parametrised, the parameter bounds corresponding to non-parametrised
+        quantum gates can take any value.
+        """
         self._groups = [
-            GateSequenceGroup(basis, length, p, r, correctness_weight,
-                              circuit_cost_weight, circuit_cost_func,
-                              parameters_bounds) for _ in range(n)]
+            GateSequenceGroup(basis, objective_unitary, length, p, r,
+                              correctness_weight, circuit_cost_weight,
+                              circuit_cost_func, parameters_bounds) for _ in
+            range(n)]
         self._p = p
         self._length = length
         self._correctness_weight = correctness_weight
         self._circuit_cost_weight = circuit_cost_weight
         self._circuit_cost_func = circuit_cost_func
-        self._unitary = unitary
+        self._objective_unitary = objective_unitary
 
     def perform_one_way_crossover(self) -> None:
+        """Apply the one way crossover step of the GLOA.
+
+        See the GLOA paper for more precision on this step.
+        """
         # One parameter per gate, length gates for each sequences, p sequences.
         number_of_parameters = self._length * self._p
         for group in self._groups:
@@ -79,35 +114,34 @@ class GateSequencePopulation:
                     self._groups[other_group_index].sequences[
                         sequence_index].params[parameter_index]
                 # Check which sequence is the best.
-                old_fidelity = qdists.gloa_fidelity(
-                    group.sequences[sequence_index], self._unitary,
-                    self._correctness_weight, self._circuit_cost_weight,
-                    self._circuit_cost_func)
-                new_fidelity = qdists.gloa_fidelity(new_sequence, self._unitary,
-                                                    self._correctness_weight,
-                                                    self._circuit_cost_weight,
-                                                    self._circuit_cost_func)
-                if old_fidelity < new_fidelity:
+                old_cost = group.costs[sequence_index]
+                new_cost = qdists.gloa_objective_function(new_sequence,
+                                                          self._objective_unitary,
+                                                          self._correctness_weight,
+                                                          self._circuit_cost_weight,
+                                                          self._circuit_cost_func)
+                if new_cost < old_cost:
                     group.sequences[sequence_index] = new_sequence
+            group.update_costs()
 
     def perform_mutation_and_recombination(self) -> None:
+        """Perform the mutation and recombination step on each group."""
         for group in self._groups:
-            group.mutate_and_recombine(self._unitary)
+            group.mutate_and_recombine()
 
-    def get_leader(self) -> QuantumGateSequence:
-        leaders = [group.get_leader(self._unitary) for group in self._groups]
+    def get_leader(self) -> typing.Tuple[float, QuantumGateSequence]:
+        """Get the global leader.
 
-        leader = leaders[0]
-        max_fidelity = qdists.gloa_fidelity(leader, self._unitary,
-                                            self._correctness_weight,
-                                            self._circuit_cost_weight,
-                                            self._circuit_cost_func)
-        for current_leader in leaders[1:]:
-            fidelity = qdists.gloa_fidelity(current_leader, self._unitary,
-                                            self._correctness_weight,
-                                            self._circuit_cost_weight,
-                                            self._circuit_cost_func)
-            if fidelity > max_fidelity:
-                max_fidelity = fidelity
-                leader = current_leader
-        return leader
+        The global leader is the leader of the group formed by the leaders of
+        each stored groups.
+
+        :return: the global leader and its cost.
+        """
+        costs_and_leaders = [group.get_leader() for group in self._groups]
+
+        leader_costs = [cost_and_leader[0] for cost_and_leader in
+                        costs_and_leaders]
+
+        best_cost_idx: int = numpy.argmin(leader_costs)
+
+        return costs_and_leaders[best_cost_idx]
