@@ -49,12 +49,13 @@ def generate_random_gate_sequence(
     parameters can be set to any value and will not be accessed.
     :return: a random quantum gate sequence.
     """
+    sequence = numpy.random.randint(0, len(basis), size=length)
     if parameters_bounds is not None:
         a, b = parameters_bounds[0], parameters_bounds[1]
-        parameters = numpy.random.rand(length) * (b - a) + a
+        parameters = numpy.random.rand(length) * (b[sequence] - a[sequence]) + \
+                     a[sequence]
+
     else:
         parameters = None
 
-    return QuantumGateSequence(basis,
-                               numpy.random.randint(0, len(basis), size=length),
-                               parameters)
+    return QuantumGateSequence(basis, sequence, parameters)
