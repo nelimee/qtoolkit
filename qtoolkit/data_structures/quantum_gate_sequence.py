@@ -60,8 +60,9 @@ class QuantumGateSequence:
         """
         self._basis = basis
         self._sequence = sequence
-        self._parameters = parameters or numpy.zeros((len(sequence),),
-                                                     dtype=numpy.float)
+        self._parameters = parameters
+        if self._parameters is None:
+            self._parameters = numpy.zeros((len(sequence),), dtype=numpy.float)
         self._resulting_matrix = resulting_matrix
         if dimension is not None:
             self._dim = dimension
