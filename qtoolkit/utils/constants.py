@@ -33,6 +33,8 @@
 
 import numpy
 
+import qtoolkit.utils.types as qtypes
+
 # Test-related constants
 USE_RANDOM_TESTS = True
 RANDOM_SAMPLES = 100
@@ -70,6 +72,26 @@ T = numpy.array([[1, 0], [0, numpy.exp(1.j * numpy.pi / 4)]],
                 dtype=numpy.complex)
 CX = numpy.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
                  dtype=numpy.complex)
+
+
+def Rx(theta: float) -> qtypes.SU2Matrix:
+    cos_theta_2 = numpy.cos(theta / 2)
+    isin_theta_2 = -1.j * numpy.sin(theta / 2)
+    return numpy.array(
+        [[cos_theta_2, isin_theta_2], [isin_theta_2, cos_theta_2]])
+
+
+def Ry(theta: float) -> qtypes.SU2Matrix:
+    cos_theta_2 = numpy.cos(theta / 2)
+    sin_theta_2 = numpy.sin(theta / 2)
+    return numpy.array(
+        [[cos_theta_2, -sin_theta_2], [sin_theta_2, cos_theta_2]])
+
+
+def Rz(theta: float) -> qtypes.SU2Matrix:
+    e_itheta_2 = numpy.exp(1.j * theta / 2)
+    return numpy.array([[1 / e_itheta_2, 0], [0, e_itheta_2]])
+
 
 # Quantum gates in SU(2)
 X_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(X))
