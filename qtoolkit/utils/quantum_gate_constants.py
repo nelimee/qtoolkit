@@ -29,42 +29,17 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Defines type hints for the qtoolkit project."""
+import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
+import qtoolkit.utils.constants as qconsts
 
-import typing
+X = qgates.QuantumGate('X', qconsts.X)
+Y = qgates.QuantumGate('Y', qconsts.Y)
+Z = qgates.QuantumGate('Z', qconsts.Z)
+H = qgates.QuantumGate('H', qconsts.H)
+S = qgates.QuantumGate('S', qconsts.S)
+T = qgates.QuantumGate('T', qconsts.T)
+ID = qgates.QuantumGate('Id', qconsts.ID2)
+CX = qgates.QuantumGate('CX', qconsts.CX)
 
-import numpy
-import qiskit
-import scipy.sparse
-import sympy
-
-# Qiskit-related types
-QuantumGateParameter = typing.Union[float, int, complex, sympy.Basic]
-QuantumBit = typing.Tuple[qiskit.QuantumRegister, int]
-ClassicalBit = typing.Tuple[qiskit.ClassicalRegister, int]
-QuantumGateArgument = typing.Union[
-    qiskit.QuantumRegister, qiskit.ClassicalRegister, QuantumBit, ClassicalBit]
-# TODO: change this type name.
-QuantumInstructions = typing.Union[qiskit.QuantumCircuit, qiskit.CompositeGate]
-
-# Mathematical types
-GenericMatrix = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
-UnitaryMatrix = GenericMatrix
-HermitianMatrix = GenericMatrix
-SU2Matrix = GenericMatrix
-
-SO3Vector = numpy.ndarray
-SUdMatrix = GenericMatrix
-
-SUdMatrixGenerator = typing.Union[SUdMatrix, typing.Callable[..., SUdMatrix]]
-
-SUMatrix = GenericMatrix
-
-GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
-
-UnsignedIntegerType = typing.Union[
-    typing.Type[numpy.uint8], typing.Type[numpy.uint16], typing.Type[
-        numpy.uint32], typing.Type[numpy.uint64]]
-
-# Other types
-NearestNeighbourQueryable = typing.Any
+CX_ctrl = qgates.QuantumGate("CX_ctrl", qconsts.ID2)
+CX_trgt = qgates.QuantumGate("CX_trgt", qconsts.ID2)

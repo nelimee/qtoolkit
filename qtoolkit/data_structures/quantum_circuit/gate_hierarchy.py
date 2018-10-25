@@ -29,42 +29,44 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Defines type hints for the qtoolkit project."""
+"""Implement the gate hierarchy used by the QuantumCircuit class."""
 
-import typing
+import qtoolkit.utils.types as qtypes
 
-import numpy
-import qiskit
-import scipy.sparse
-import sympy
 
-# Qiskit-related types
-QuantumGateParameter = typing.Union[float, int, complex, sympy.Basic]
-QuantumBit = typing.Tuple[qiskit.QuantumRegister, int]
-ClassicalBit = typing.Tuple[qiskit.ClassicalRegister, int]
-QuantumGateArgument = typing.Union[
-    qiskit.QuantumRegister, qiskit.ClassicalRegister, QuantumBit, ClassicalBit]
-# TODO: change this type name.
-QuantumInstructions = typing.Union[qiskit.QuantumCircuit, qiskit.CompositeGate]
+class QuantumInstruction:
+    """The most generic "gate" of the hierarchy."""
 
-# Mathematical types
-GenericMatrix = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
-UnitaryMatrix = GenericMatrix
-HermitianMatrix = GenericMatrix
-SU2Matrix = GenericMatrix
+    def __init__(self, name: str) -> None:
+        self._name = name
 
-SO3Vector = numpy.ndarray
-SUdMatrix = GenericMatrix
+    @property
+    def name(self):
+        return self._name
 
-SUdMatrixGenerator = typing.Union[SUdMatrix, typing.Callable[..., SUdMatrix]]
 
-SUMatrix = GenericMatrix
+class QuantumGate(QuantumInstruction):
+    """Base class for all the quantum gates."""
 
-GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
+    def __init__(self, name: str, matrix: qtypes.SUdMatrix) -> None:
+        super().__init__(name)
+        self._matrix = matrix
 
-UnsignedIntegerType = typing.Union[
-    typing.Type[numpy.uint8], typing.Type[numpy.uint16], typing.Type[
-        numpy.uint32], typing.Type[numpy.uint64]]
+    @property
+    def matrix(self):
+        return self._matrix
 
-# Other types
-NearestNeighbourQueryable = typing.Any
+    @property
+    def dim(self):
+        return self._matrix.shape[0]
+
+
+class ParametrisedQuantumGate(QuantumInstruction):
+
+    def __init__(self, name: str,
+                 matrix_generator: qtypes.SUdMatrixGenerator) -> None:
+        super().__init__(name)
+        self._matrix_generator = matrix_generator
+
+    def __call__(self, *args, **kwargs) -> QuantumGate:
+        return QuantumGate(self.name, self._matrix_generator(*args, **kwargs))
