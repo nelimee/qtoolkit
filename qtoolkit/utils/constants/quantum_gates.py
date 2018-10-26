@@ -30,16 +30,16 @@
 # ======================================================================
 
 import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.matrices as mconsts
 
-X = qgates.QuantumGate('X', qconsts.X)
-Y = qgates.QuantumGate('Y', qconsts.Y)
-Z = qgates.QuantumGate('Z', qconsts.Z)
-H = qgates.QuantumGate('H', qconsts.H)
-S = qgates.QuantumGate('S', qconsts.S)
-T = qgates.QuantumGate('T', qconsts.T)
-ID = qgates.QuantumGate('Id', qconsts.ID2)
-CX = qgates.QuantumGate('CX', qconsts.CX)
+X = qgates.QuantumGate('X', mconsts.X)
+Y = qgates.QuantumGate('Y', mconsts.Y)
+Z = qgates.QuantumGate('Z', mconsts.Z)
+H = qgates.QuantumGate('H', mconsts.H)
+S = qgates.QuantumGate('S', mconsts.S)
+T = qgates.QuantumGate('T', mconsts.T)
+ID = qgates.QuantumGate('Id', mconsts.ID2)
+CX = qgates.QuantumGate('CX', mconsts.CX)
 
-CX_ctrl = qgates.QuantumGate("CX_ctrl", qconsts.ID2)
-CX_trgt = qgates.QuantumGate("CX_trgt", qconsts.ID2)
+CX_ctrl = qgates.QuantumGate("CX_ctrl", mconsts.ID2)
+CX_trgt = qgates.QuantumGate("CX_trgt", mconsts.ID2)

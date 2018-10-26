@@ -33,7 +33,7 @@ from collections import deque
 from typing import List, Union, Tuple
 
 import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
-import qtoolkit.utils.quantum_gate_constants as qgate_consts
+import qtoolkit.utils.constants.quantum_gates as qgate_consts
 
 
 class QuantumCircuit:
