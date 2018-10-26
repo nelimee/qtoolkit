@@ -48,9 +48,11 @@ class QuantumInstruction:
 class QuantumGate(QuantumInstruction):
     """Base class for all the quantum gates."""
 
-    def __init__(self, name: str, matrix: qtypes.SUdMatrix) -> None:
+    def __init__(self, name: str, matrix: qtypes.SUdMatrix,
+                 *parameters: float) -> None:
         super().__init__(name)
         self._matrix = matrix
+        self._parameters = parameters
 
     @property
     def matrix(self):
@@ -59,6 +61,10 @@ class QuantumGate(QuantumInstruction):
     @property
     def dim(self):
         return self._matrix.shape[0]
+
+    @property
+    def parameters(self):
+        return self._parameters
 
 
 class ParametrisedQuantumGate(QuantumInstruction):
@@ -69,4 +75,5 @@ class ParametrisedQuantumGate(QuantumInstruction):
         self._matrix_generator = matrix_generator
 
     def __call__(self, *args, **kwargs) -> QuantumGate:
-        return QuantumGate(self.name, self._matrix_generator(*args, **kwargs))
+        return QuantumGate(self.name, self._matrix_generator(*args, **kwargs),
+                           *args)
