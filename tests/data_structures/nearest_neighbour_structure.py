@@ -35,10 +35,10 @@ import unittest
 
 import numpy
 
-import qtoolkit.data_structures.nearest_neighbour_structure as NNstruct
+import qtoolkit.data_structures.nearest_neighbour_structure as nn_structure
 import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
 import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.matrices as mconsts
 import tests.qtestcase as qtest
 
 
@@ -56,7 +56,7 @@ class NearestNeighbourStructureTestCase(qtest.QTestCase):
         dataset_size = 1000
         dimension = 3
 
-        cls._basis = [qconsts.H_SU2, qconsts.T_SU2, qconsts.T_SU2.T.conj()]
+        cls._basis = [mconsts.H_SU2, mconsts.T_SU2, mconsts.T_SU2.T.conj()]
         cls._sequences = [qgate_seq.QuantumGateSequence(cls._basis,
                                                         numpy.random.randint(0,
                                                                              len(
@@ -67,13 +67,13 @@ class NearestNeighbourStructureTestCase(qtest.QTestCase):
         cls._int_sequences = numpy.array([seq.gates for seq in cls._sequences])
 
     def test_construction(self) -> None:
-        """Tests the construction ."""
-        NNstruct.NearestNeighbourStructure(self._data, self._int_sequences,
-                                           self._basis)
+        """Tests the construction."""
+        nn_structure.NearestNeighbourStructure(self._data, self._int_sequences,
+                                               self._basis)
 
     def _random_query_su2(self,
-                          nn_struct: NNstruct.NearestNeighbourStructure) -> \
-        None:
+                          nn_struct: nn_structure.NearestNeighbourStructure) \
+        -> None:
         """Perform a random query and check the validity of the result."""
         random_matrix = gen_su2.generate_random_SU2_matrix()
         dist, res = nn_struct.query(random_matrix)
@@ -82,9 +82,9 @@ class NearestNeighbourStructureTestCase(qtest.QTestCase):
 
     def test_query_su2(self) -> None:
         """Tests query validity."""
-        nn_struct = NNstruct.NearestNeighbourStructure(self._data,
-                                                       self._int_sequences,
-                                                       self._basis)
+        nn_struct = nn_structure.NearestNeighbourStructure(self._data,
+                                                           self._int_sequences,
+                                                           self._basis)
         self._random_query_su2(nn_struct)
 
 

@@ -29,26 +29,17 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
+import qtoolkit.utils.constants.matrices as mconsts
 
-import unittest
+X = qgates.QuantumGate('X', mconsts.X)
+Y = qgates.QuantumGate('Y', mconsts.Y)
+Z = qgates.QuantumGate('Z', mconsts.Z)
+H = qgates.QuantumGate('H', mconsts.H)
+S = qgates.QuantumGate('S', mconsts.S)
+T = qgates.QuantumGate('T', mconsts.T)
+ID = qgates.QuantumGate('Id', mconsts.ID2)
+CX = qgates.QuantumGate('CX', mconsts.CX)
 
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
-
-
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
-
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
-
-
-if __name__ == '__main__':
-    unittest.main()
+CX_ctrl = qgates.QuantumGate("CX_ctrl", mconsts.ID2)
+CX_trgt = qgates.QuantumGate("CX_trgt", mconsts.ID2)

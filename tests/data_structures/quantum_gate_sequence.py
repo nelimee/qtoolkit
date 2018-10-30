@@ -36,7 +36,7 @@ import unittest
 import numpy
 
 import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.matrices as mconsts
 import tests.qtestcase as qtest
 
 
@@ -46,12 +46,12 @@ class QuantumGateSequenceTestCase(qtest.QTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """Compute and store constants re-used during the tests."""
-        cls._basis_SU2_HT = [qconsts.H_SU2, qconsts.H_SU2.T.conj(),
-                             qconsts.T_SU2, qconsts.T_SU2.T.conj()]
+        cls._basis_SU2_HT = [mconsts.H_SU2, mconsts.H_SU2.T.conj(),
+                             mconsts.T_SU2, mconsts.T_SU2.T.conj()]
         cls._basis_SU2_HT_inverses = numpy.array([1, 0, 3, 2])
-        cls._basis_SU2_HTS = [qconsts.H_SU2, qconsts.H_SU2.T.conj(),
-                              qconsts.T_SU2, qconsts.T_SU2.T.conj(),
-                              qconsts.S_SU2, qconsts.S_SU2.T.conj()]
+        cls._basis_SU2_HTS = [mconsts.H_SU2, mconsts.H_SU2.T.conj(),
+                              mconsts.T_SU2, mconsts.T_SU2.T.conj(),
+                              mconsts.S_SU2, mconsts.S_SU2.T.conj()]
         cls._basis_SU2_HTS_inverses = numpy.array([1, 0, 3, 2, 5, 4])
 
         cls._small_gate_sequence = numpy.random.randint(0,

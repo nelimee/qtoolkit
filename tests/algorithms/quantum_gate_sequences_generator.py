@@ -37,7 +37,7 @@ import unittest
 
 import numpy
 
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.matrices as mconsts
 import qtoolkit.utils.types as qtypes
 import tests.qtestcase as qtest
 from qtoolkit.algorithms.quantum_gate_sequences_generator import \
@@ -56,13 +56,13 @@ class QuantumGateSequencesGeneratorTestCase(qtest.QTestCase):
     @classmethod
     def setUpClass(cls):
         """Setup only once for constants to avoid useless computations."""
-        cls._basis = [qconsts.H_SU2, qconsts.H_SU2.T.conj(), qconsts.T_SU2,
-                      qconsts.T_SU2.T.conj()]
+        cls._basis = [mconsts.H_SU2, mconsts.H_SU2.T.conj(), mconsts.T_SU2,
+                      mconsts.T_SU2.T.conj()]
         cls._simplifications = {(0, 1), (1, 0), (2, 2, 3, 3), (3, 3, 2, 2),
                                 (2, 3), (3, 2)}
         cls._max_simplification_length = 4
 
-        cls._small_basis = [qconsts.H, qconsts.T, qconsts.T.T.conj()]
+        cls._small_basis = [mconsts.H, mconsts.T, mconsts.T.T.conj()]
         cls._small_simplifications = {(0, 0), (1, 2), (2, 1), (2, 2, 1, 1),
                                       (1, 1, 2, 2)}
         cls._small_max_simplification_length = 4
@@ -83,19 +83,19 @@ class QuantumGateSequencesGeneratorTestCase(qtest.QTestCase):
     def test_too_large_basis(self) -> None:
         """The given basis is too large."""
         # Should not raise anything.
-        self._perform_gen([qconsts.H_SU2] * 255, 1, self._simplifications)
-        self._perform_gen([qconsts.H_SU2] * 65535, 1, self._simplifications,
+        self._perform_gen([mconsts.H_SU2] * 255, 1, self._simplifications)
+        self._perform_gen([mconsts.H_SU2] * 65535, 1, self._simplifications,
                           gate_id_type=numpy.uint16)
         with self.assertRaises(AssertionError):
-            self._perform_gen([qconsts.H_SU2] * 256, 1, self._simplifications)
+            self._perform_gen([mconsts.H_SU2] * 256, 1, self._simplifications)
         with self.assertRaises(AssertionError):
-            self._perform_gen([qconsts.H_SU2] * 65536, 1, self._simplifications,
+            self._perform_gen([mconsts.H_SU2] * 65536, 1, self._simplifications,
                               gate_id_type=numpy.uint16)
 
     def test_simplification_not_in_basis(self) -> None:
         """A gate in the simplifications is not in the basis."""
         with self.assertRaises(AssertionError):
-            self._perform_gen([qconsts.H_SU2, qconsts.H_SU2.T.conj()], 1,
+            self._perform_gen([mconsts.H_SU2, mconsts.H_SU2.T.conj()], 1,
                               {(0, 1), (2, 3)})
 
     def test_generation_depth_1_no_nodes(self) -> None:
@@ -143,7 +143,7 @@ class QuantumGateSequencesGeneratorTestCase(qtest.QTestCase):
         """Generated gates without nodes at depth 2 are correct."""
         generated_gates = self._perform_gen(self._small_basis, 2,
                                             self._small_simplifications)
-        H, T, Tinv = qconsts.H, qconsts.T, qconsts.T.T.conj()
+        H, T, Tinv = mconsts.H, mconsts.T, mconsts.T.T.conj()
         expected_results = [(numpy.array([0, 1], dtype=numpy.uint8), H @ T),
                             (numpy.array([0, 2], dtype=numpy.uint8), H @ Tinv),
                             (numpy.array([1, 0], dtype=numpy.uint8), T @ H),
@@ -171,7 +171,7 @@ class QuantumGateSequencesGeneratorTestCase(qtest.QTestCase):
         generated_gates = self._perform_gen(self._small_basis, 2,
                                             self._small_simplifications,
                                             include_nodes=True)
-        H, T, Tinv = qconsts.H, qconsts.T, qconsts.T.T.conj()
+        H, T, Tinv = mconsts.H, mconsts.T, mconsts.T.T.conj()
         expected_results = [(numpy.array([0], dtype=numpy.uint8), H),
                             (numpy.array([0, 1], dtype=numpy.uint8), H @ T),
                             (numpy.array([0, 2], dtype=numpy.uint8), H @ Tinv),

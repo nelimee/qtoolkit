@@ -33,7 +33,7 @@
 
 import numpy
 
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.matrices as mconsts
 import qtoolkit.utils.types as qtypes
 
 
@@ -96,8 +96,8 @@ def so3_to_su2(coefficients: qtypes.SO3Vector) -> qtypes.SU2Matrix:
         theta_2 = theta / 2
         sin_theta_2 = numpy.sin(theta_2)
         unitary = (numpy.cos(theta_2) * identity - 1.j * sin_theta_2 * (
-            normalised_coefficients[0] * qconsts.P_X + normalised_coefficients[
-            1] * qconsts.P_Y + normalised_coefficients[2] * qconsts.P_Z))
+            normalised_coefficients[0] * mconsts.P_X + normalised_coefficients[
+            1] * mconsts.P_Y + normalised_coefficients[2] * mconsts.P_Z))
         return unitary
 
 
@@ -132,9 +132,9 @@ def H_to_su2(coefficients: numpy.ndarray) -> qtypes.SU2Matrix:
     :param coefficients: The coefficients characterising the SU(2) matrix.
     :return: The SU(2) matrix corresponding to the given coefficients.
     """
-    return coefficients[0] * qconsts.ID2 - 1.j * (
-        coefficients[1] * qconsts.P_X + coefficients[2] * qconsts.P_Y +
-        coefficients[3] * qconsts.P_Z)
+    return coefficients[0] * mconsts.ID2 - 1.j * (
+        coefficients[1] * mconsts.P_X + coefficients[2] * mconsts.P_Y +
+        coefficients[3] * mconsts.P_Z)
 
 
 def unitary_to_su2(unitary: qtypes.UnitaryMatrix) -> qtypes.SU2Matrix:

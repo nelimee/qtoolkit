@@ -29,25 +29,43 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+"""Test of the GateParameter class."""
 
 import unittest
 
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
 import tests.qtestcase as qtest
+from qtoolkit.data_structures.quantum_circuit.simplifier.gate_parameter import \
+    GateParameter
 
 
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
+class GateParameterTestCase(qtest.QTestCase):
+    """Unit-tests for the GateParameter class."""
 
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
+    def test_initialisation_with_integer(self) -> None:
+        GateParameter(0)
+        GateParameter(1)
+        GateParameter(-1)
+
+    def test_initialisation_with_string(self) -> None:
+        GateParameter("a")
+        GateParameter("a_not_so_empty_name_repeated" * 100)
+
+    def test_default_initialisation_lambda(self) -> None:
+        gp = GateParameter(1)
+        for i in range(10):
+            self.assertEqual(gp.apply_transformation(i), i)
+
+    def test_apply_transformation_with_lambda(self) -> None:
+        gp = GateParameter(1, lambda x: x + 1)
+        for i in range(10):
+            self.assertEqual(gp.apply_transformation(i), i + 1)
+
+    def test_apply_transformation_with_function_def(self) -> None:
+        def f(x): return 2 * x + 7
+
+        gp = GateParameter(1, f)
+        for i in range(10):
+            self.assertEqual(gp.apply_transformation(i), f(i))
 
 
 if __name__ == '__main__':

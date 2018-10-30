@@ -1,9 +1,8 @@
 #macro( snakeToCamel $txt )
- #set( $identifiers = $txt.split("_") )
- #set( $result = "" )
- #foreach( $identifier in $identifiers )
-  #set( $startID = $identifier.substring(0, 1).toUpperCase() )
-  #set( $endID = $identifier.substring(1) )
-  #set( $result = "${result}${startID}${endID}" )
- #end 
- ${result}#end
+#set( $identifiers = $txt.split("_") )
+#set( $result = "" )
+#foreach( $identifier in $identifiers )
+#set( $startID = $identifier.substring(0, 1).toUpperCase() )
+#set( $endID = $identifier.substring(1) )
+#set( $result = "${result}${startID}${endID}" )
+#end${result}#end

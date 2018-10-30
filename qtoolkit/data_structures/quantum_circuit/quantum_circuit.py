@@ -33,12 +33,13 @@ from collections import deque
 from typing import List, Union, Tuple
 
 import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
-import qtoolkit.utils.quantum_gate_constants as qgate_consts
+import qtoolkit.utils.constants.quantum_gates as qgconsts
 
 
 class QuantumCircuit:
 
     def __init__(self, qubit_number: int) -> None:
+        assert qubit_number > 0, "The circuit should have at least 1 qubit."
         self._last_inserted_index: Union[int, Tuple[int, int]] = None
         self._qubits = [list() for _ in range(qubit_number)]
         self._insertion_order = deque()
@@ -51,6 +52,11 @@ class QuantumCircuit:
         assert quantum_gate.dim == 2 ** len(qubits), (
             "The quantum gate dimension does not match the number of qubits "
             "given.")
+        for qubit in qubits:
+            if not 0 <= qubit < len(self._qubits):
+                raise IndexError(
+                    f"The qubit n°{qubit} is out of range for the current "
+                    f"quantum circuit.")
         self._insertion_order.append(qubits)
         if len(qubits) == 1:
             # If it is a 1-qubit gate.
@@ -61,18 +67,35 @@ class QuantumCircuit:
             # Else it is CX
             ctrl, trgt = qubits[0], qubits[1]
             self._last_inserted_index = (ctrl, trgt)
-            self._qubits[ctrl].append(qgate_consts.CX_ctrl)
-            self._qubits[trgt].append(qgate_consts.CX_trgt)
+            self._qubits[ctrl].append(qgconsts.CX_ctrl)
+            self._qubits[trgt].append(qgconsts.CX_trgt)
 
     def remove_last_inserted(self) -> None:
+        if not self._insertion_order:
+            raise RuntimeError(
+                "Impossible to remove the last inserted gate as there is no "
+                "gate in the circuit.")
         for qubit_idx in self._insertion_order.pop():
             self._qubits[qubit_idx].pop()
 
     def get_last_modified_qubits(self) -> Union[
         Tuple[List[qgates.QuantumGate]], Tuple[
             List[qgates.QuantumGate], List[qgates.QuantumGate]]]:
+        if self._last_inserted_index is None:
+            raise RuntimeError(
+                "[QuantumCircuit.get_last_modified_qubits] Attempting to "
+                "acces the last modified qubit of a quantum circuit but no "
+                "operation as been performed on this circuit.")
         if isinstance(self._last_inserted_index, int):
             return self._qubits[self._last_inserted_index],
         else:
             return (self._qubits[self._last_inserted_index[0]],
                     self._qubits[self._last_inserted_index[1]])
+
+    @property
+    def size(self):
+        return len(self._qubits)
+
+    @property
+    def qubits(self):
+        return self._qubits

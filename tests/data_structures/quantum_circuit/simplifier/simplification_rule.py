@@ -29,25 +29,42 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+"""Test of the SimplificationRule class."""
 
 import unittest
 
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
+import qtoolkit.utils.constants.quantum_gates as qgconsts
 import tests.qtestcase as qtest
+from qtoolkit.data_structures.quantum_circuit.simplifier.gate_parameter import \
+    GateParameter
+from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
+    import \
+    SimplificationRule
 
 
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
+class SimplificationRuleTestCase(qtest.QTestCase):
+    """Unit-tests for the SimplificationRule class."""
 
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
+    def setUp(self):
+        self._rule_H_H = ['H', 'H']
+        self._none_parameters_2 = [None] * 2
+
+        self._non_simplifiable_H_H = [qgconsts.H, qgconsts.X, qgconsts.X,
+                                      qgconsts.H]
+        self._simplifiable_H_H = [qgconsts.X, qgconsts.H, qgconsts.H,
+                                  qgconsts.X]
+
+        self._rule_Rx_Rx = ['Rx', 'Rx']
+        self._parameters_inversed_2 = [GateParameter(1, lambda x: x),
+                                       GateParameter(1, lambda x: -x)]
+
+    def test_initialisation_simple(self) -> None:
+        SimplificationRule(self._rule_H_H, self._none_parameters_2)
+
+    def test_is_simplifiable(self) -> None:
+        sr = SimplificationRule(self._rule_H_H, self._none_parameters_2)
+        self.assertTrue(sr.is_simplifiable(self._simplifiable_H_H))
+        self.assertFalse(sr.is_simplifiable(self._non_simplifiable_H_H))
 
 
 if __name__ == '__main__':
