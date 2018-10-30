@@ -121,7 +121,7 @@ class QuantumGateSequence:
 class InvertibleQuantumGateSequence(QuantumGateSequence):
 
     def __init__(self, basis: Sequence[qtypes.SUdMatrixGenerator],
-                 sequence: numpy.ndarray, inverses: Optional[numpy.ndarray],
+                 sequence: numpy.ndarray, inverses: numpy.ndarray,
                  parameters: Optional[numpy.ndarray] = None,
                  inverse_parameters: Optional[Sequence[
                      Optional[qtypes.GateParameterTransformation]]] = None,
@@ -134,26 +134,32 @@ class InvertibleQuantumGateSequence(QuantumGateSequence):
         def do_nothing(x: qtypes.QuantumGateParameter):
             return x
 
-        self._inverse_parameters = [inv or do_nothing for inv in
-                                    inverse_parameters]
+        if inverse_parameters is None:
+            self._inverse_parameters = [do_nothing] * len(basis)
+        else:
+            self._inverse_parameters = [inv or do_nothing for inv in
+                                        inverse_parameters]
 
     @property
     def H(self) -> 'InvertibleQuantumGateSequence':
         inverted_parameters = [self._inverse_parameters[i](param) for i, param
                                in enumerate(reversed(self._parameters))]
         inverted_sequence = self._inverses[self._sequence][::-1]
+        inv_matrix = None
+        if self._resulting_matrix is not None:
+            inv_matrix = self._resulting_matrix.T.conj()
         return InvertibleQuantumGateSequence(self._basis, inverted_sequence,
                                              self._inverses,
                                              numpy.array(inverted_parameters),
                                              self._inverse_parameters,
-                                             self._resulting_matrix.T.conj(),
+                                             inv_matrix,
                                              self._dim)
 
     def __matmul__(self,
                    other: 'InvertibleQuantumGateSequence') -> \
         'InvertibleQuantumGateSequence':
         # Using super().__matmul__().
-        res = self @ other
+        res = super().__matmul__(other)
         return InvertibleQuantumGateSequence(self._basis, res.gates,
                                              self._inverses, res.params,
                                              self._inverse_parameters,
