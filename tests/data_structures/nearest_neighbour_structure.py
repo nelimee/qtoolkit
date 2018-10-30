@@ -67,7 +67,7 @@ class NearestNeighbourStructureTestCase(qtest.QTestCase):
         cls._int_sequences = numpy.array([seq.gates for seq in cls._sequences])
 
     def test_construction(self) -> None:
-        """Tests the construction ."""
+        """Tests the construction."""
         nn_structure.NearestNeighbourStructure(self._data, self._int_sequences,
                                                self._basis)
 
