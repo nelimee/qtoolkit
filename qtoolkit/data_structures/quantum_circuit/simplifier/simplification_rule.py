@@ -80,8 +80,8 @@ class SimplificationRule:
 
         # We try to find a subsequence in the given sequence that may be
         # simplifiable.
-        sequence_str = ''.join([gate.name for gate in quantum_gate_sequence])
-        rule_str = ''.join(self._rule)
+        sequence_str = '_'.join([gate.name for gate in quantum_gate_sequence])
+        rule_str = '_'.join(self._rule)
         position = sequence_str.find(rule_str)
         # If there is no sequence that match, we are done.
         if position == -1:
