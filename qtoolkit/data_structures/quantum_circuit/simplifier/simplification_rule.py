@@ -97,7 +97,9 @@ class SimplificationRule:
         while position != -1:
             sequence = quantum_gate_sequence[
                        position:position + len(self._rule)]
-            if self.is_simplifiable_exact_length(sequence):
+            # We already checked for gate names, then we just need to check for
+            # parameters.
+            if self._are_parameters_valid(sequence):
                 return True
             position = sequence_str.find(rule_str, position)
 
@@ -141,6 +143,18 @@ class SimplificationRule:
             if gate.name != self._rule[idx]:
                 return False
 
+        return self._are_parameters_valid(quantum_gate_sequence)
+
+    def _are_parameters_valid(self, quantum_gate_sequence: typing.List[
+        gates.QuantumGate]) -> bool:
+        """Check if the parameters match the simplification rule or not.
+
+        :param quantum_gate_sequence: the sequence of quantum gates to check for
+        simplifiability. The sequence should have the exact same length as the
+        stored rule.
+        :return: True if the parameters of the sequence match the simplification
+        rule, else False.
+        """
         # Check the gates parameters
         parameters = dict()
         for idx, gate in enumerate(quantum_gate_sequence):
