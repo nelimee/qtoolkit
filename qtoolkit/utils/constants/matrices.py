@@ -80,3 +80,6 @@ S_SU2 = S / numpy.lib.scimath.sqrt(numpy.linalg.det(S))
 T_SU2 = T / numpy.lib.scimath.sqrt(numpy.linalg.det(T))
 CX_SU2 = CX / numpy.lib.scimath.sqrt(
     numpy.lib.scimath.sqrt(numpy.linalg.det(CX)))
+
+P0 = numpy.array([[1, 0], [0, 0]], dtype=numpy.complex)
+P1 = numpy.array([[0, 0], [0, 1]], dtype=numpy.complex)
