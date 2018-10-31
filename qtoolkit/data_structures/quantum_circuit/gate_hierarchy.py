@@ -31,6 +31,8 @@
 
 """Implement the gate hierarchy used by the QuantumCircuit class."""
 
+import typing
+
 import qtoolkit.utils.types as qtypes
 
 
@@ -45,14 +47,30 @@ class QuantumInstruction:
         return self._name
 
 
+class ParametrisedQuantumGate(QuantumInstruction):
+
+    def __init__(self, name: str, matrix_generator: qtypes.SUdMatrixGenerator,
+                 inverse: typing.Callable[
+                     ['QuantumGate'], 'QuantumGate']) -> None:
+        super().__init__(name)
+        self._matrix_generator = matrix_generator
+        self._inverse_callable = inverse
+
+    def __call__(self, *args: float, **kwargs) -> 'QuantumGate':
+        return QuantumGate(self.name, self._matrix_generator(*args, **kwargs),
+                           self._inverse_callable, parameters=args)
+
+
 class QuantumGate(QuantumInstruction):
     """Base class for all the quantum gates."""
 
     def __init__(self, name: str, matrix: qtypes.SUdMatrix,
-                 *parameters: float) -> None:
+                 inverse: typing.Callable[['QuantumGate'], 'QuantumGate'],
+                 parameters: typing.Tuple[float] = tuple()) -> None:
         super().__init__(name)
         self._matrix = matrix
         self._parameters = parameters
+        self._inverse_callable = inverse
 
     @property
     def matrix(self):
@@ -66,14 +84,6 @@ class QuantumGate(QuantumInstruction):
     def parameters(self):
         return self._parameters
 
-
-class ParametrisedQuantumGate(QuantumInstruction):
-
-    def __init__(self, name: str,
-                 matrix_generator: qtypes.SUdMatrixGenerator) -> None:
-        super().__init__(name)
-        self._matrix_generator = matrix_generator
-
-    def __call__(self, *args, **kwargs) -> QuantumGate:
-        return QuantumGate(self.name, self._matrix_generator(*args, **kwargs),
-                           *args)
+    @property
+    def H(self):
+        return self._inverse_callable(self)
