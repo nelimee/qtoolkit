@@ -60,19 +60,33 @@ class QuantumOperation:
         return self._target
 
     def matrix(self, qubit_number: int) -> numpy.ndarray:
+        # If the operation is not a controlled by any qubit then we can
+        # simplify greatly the algorithm.
+        if not self._controls:
+            ret = 1
+            for qubit_index in range(qubit_number):
+                # If we are on the target qubit then apply the gate.
+                if qubit_index == self._target:
+                    ret = numpy.kron(ret, self._gate.matrix)
+                # Else, we should multiply by the gate that is controlled.
+                else:
+                    ret = numpy.kron(ret, mconsts.ID2)
+            return ret
+
+        # Else, we have control qubits.
         ret = numpy.zeros((2 ** qubit_number, 2 ** qubit_number),
                           dtype=numpy.complex)
         # For each possible values for the control qubits.
         for ctrl_values in range(2 ** len(self._controls)):
             ctrl_values_list = [(ctrl_values >> k) & 1 for k in
-                                range(max(1, len(self._controls)))]
+                                range(len(self._controls))]
             current_control_index = 0
             current_matrix = 1
             for qubit_index in range(qubit_number):
                 # If we are on the target qubit then...
                 if qubit_index == self._target:
-                    # If any of the control qubit is 0, then just multiply by
-                    # the identity.
+                    # If all the control qubits are 1, then multiply by the
+                    # gate.
                     if all(ctrl_values_list):
                         current_matrix = numpy.kron(current_matrix,
                                                     self._gate.matrix)
