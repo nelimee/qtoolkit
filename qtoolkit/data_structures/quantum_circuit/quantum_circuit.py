@@ -73,13 +73,13 @@ class QuantumCircuit:
         # Create the target wire
         self._graph.add_edge(self._last_inserted_operations[operation.target],
                              current_node_id)
-        self._last_inserted_operations[operation.target] = current_node_id
+        self._last_inserted_operations[operation.target] = self._node_counter
 
         # Create the control wires
         for ctrl in operation.controls:
             self._graph.add_edge(self._last_inserted_operations[ctrl],
                                  current_node_id)
-            self._last_inserted_operations[ctrl] = current_node_id
+            self._last_inserted_operations[ctrl] = self._node_counter
 
     def apply(self, gate: qgate.QuantumGate, target: int,
               controls: typing.Sequence[int] = ()) -> None:
