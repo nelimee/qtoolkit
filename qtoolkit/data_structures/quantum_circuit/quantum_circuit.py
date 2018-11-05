@@ -150,3 +150,38 @@ class QuantumCircuit:
     def size(self):
         """Getter on the number of qubits of the current instance."""
         return self._qubit_number
+
+    def __iadd__(self, other: 'QuantumCircuit') -> 'QuantumCircuit':
+        """Add all the operations contained in other to the current instance.
+
+        :param other: the quantum circuit containing the operations to append
+        to the current instance.
+        :return: The union of self and other.
+        """
+        # 1. Checks
+        if self.size != other.size:
+            raise RuntimeError(
+                f"The number of qubits of the first circuit ({self.size}) does "
+                f"not match the number of qubits of the second circuit "
+                f"({other.size}).")
+        # 2. Update the graph
+        # 2.1. First remove the "input" nodes from the other graph. We don't
+        # want to change or copy the other graph so we take a view of the other
+        # graph without the "input" nodes.
+        other_subgraph = other._graph.subgraph(
+            range(other.size, other._node_counter))
+        # 2.2. Regroup the two graphs into one graph.
+        self._graph = nx.disjoint_union(self._graph, other_subgraph)
+        # 2.3. Join the nodes if possible.
+        for qubit_index in range(self.size):
+            old_neighbor = list(other._graph.neighbors(qubit_index))
+            if old_neighbor:
+                new_neighbor = old_neighbor[0] - other.size + self._node_counter
+                self._graph.add_edge(
+                    self._last_inserted_operations[qubit_index], new_neighbor)
+                # Only change the last inserted index if we joined the nodes.
+                self._last_inserted_operations[qubit_index] = new_neighbor
+        # 3. Update the other attributes:
+        self._node_counter += other._node_counter - other.size
+
+        return self
