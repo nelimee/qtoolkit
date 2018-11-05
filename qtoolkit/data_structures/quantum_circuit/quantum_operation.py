@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Implementation of the QuantumOperation class."""
+
 import typing
 
 import numpy
@@ -38,9 +40,20 @@ from qtoolkit.data_structures.quantum_circuit.gate_hierarchy import QuantumGate
 
 
 class QuantumOperation:
-
+    """A class representing a quantum operation."""
     def __init__(self, gate: QuantumGate, target: int,
                  controls: typing.Sequence[int] = tuple()) -> None:
+        """Initialise the QuantumOperation instance.
+
+        For the moment, the QuantumOperation class only support 1-qubit gates
+        with arbitrary controls. In the real world, this is not really a huge
+        limitation as most of the quantum hardware only supports 1-qubit gates
+        and one controlled operation like CX.
+
+        :param gate: the 1-qubit quantum gate of the operation.
+        :param target: the target qubit of the given quantum gate.
+        :param controls: an arbitrary number of control qubits.
+        """
         assert target not in controls, "The target qubit cannot be used as a " \
                                        "control qubit."
         self._gate = gate
@@ -49,17 +62,26 @@ class QuantumOperation:
 
     @property
     def gate(self):
+        """Getter for the 1-qubit quantum gate stored in this operation."""
         return self._gate
 
     @property
     def controls(self):
+        """Getter for the control qubits."""
         return self._controls
 
     @property
     def target(self):
+        """Getter for the target qubit."""
         return self._target
 
     def matrix(self, qubit_number: int) -> numpy.ndarray:
+        """Computes the matrix representation of the operation.
+
+        :param qubit_number: the number of qubits of the overall circuit.
+        :return: a 2**qubit_number x 2**qubit_number matrix representing the
+        current operation.
+        """
         # If the operation is not a controlled by any qubit then we can
         # simplify greatly the algorithm.
         if not self._controls:

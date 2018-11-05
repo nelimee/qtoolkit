@@ -37,36 +37,72 @@ import qtoolkit.utils.types as qtypes
 
 
 class QuantumInstruction:
-    """The most generic "gate" of the hierarchy."""
+    """The base class for all the gate hierarchy."""
 
     def __init__(self, name: str) -> None:
+        """Initialise the QuantumInstruction instance.
+
+        :param name: the name of the instruction.
+        """
         self._name = name
 
     @property
     def name(self):
+        """Getter for the instruction name."""
         return self._name
 
 
 class ParametrisedQuantumGate(QuantumInstruction):
+    """Class representing a parametrised quantum gate.
 
-    def __init__(self, name: str, matrix_generator: qtypes.SUdMatrixGenerator,
+    For the moment, "parameters" means "one floating-point value". Further
+    implementation may improve this to arbitrary parameters.
+    """
+
+    def __init__(self, name: str,
+                 matrix_generator: qtypes.UnitaryMatrixGenerator,
                  inverse: typing.Callable[
                      ['QuantumGate'], 'QuantumGate']) -> None:
+        """Initialise the parametrised quantum gate.
+
+        :param name: the name of the quantum gate.
+        :param matrix_generator: a callable that will generate a unitary matrix
+        from a single floating-point value.
+        :param inverse: a callable that will be called when trying to inverse
+        a QuantumGate. See QuantumGate.inverse for more information.
+        """
         super().__init__(name)
         self._matrix_generator = matrix_generator
         self._inverse_callable = inverse
 
     def __call__(self, *args: float, **kwargs) -> 'QuantumGate':
+        """Generate the quantum gate obtained with the given parameters.
+
+        :param args: the parameters forwarded to the matrix_generator callable.
+        :param kwargs: additional data forwarded to the matrix_generator
+        callable.
+        :return: a QuantumGate corresponding to the current parametrised
+        quantum gate with the given parameters.
+        """
         return QuantumGate(self.name, self._matrix_generator(*args, **kwargs),
                            self._inverse_callable, parameters=args)
 
 
 class QuantumGate(QuantumInstruction):
-    """Base class for all the quantum gates."""
+    """Class representing a quantum gate."""
 
-    def __init__(self, name: str, matrix: qtypes.SUdMatrix,
+    def __init__(self, name: str, matrix: qtypes.UnitaryMatrix,
                  inverse: typing.Callable[['QuantumGate'], 'QuantumGate'],
                  parameters: typing.Tuple[float] = tuple()) -> None:
+        """Initialise the QuantumGate instance.
+
+        :param name: name of the quantum gate.
+        :param matrix: unitary matrix representing the quantum gate.
+        :param inverse: callable used to inverse the current quantum gate.
+        :param parameters: the set of parameters used to generate the current
+        quantum gate. If the current quantum gate was not generated from a
+        ParametrisedQuantumGate, this value is empty.
+        """
         super().__init__(name)
         self._matrix = matrix
         self._parameters = parameters
@@ -74,16 +110,20 @@ class QuantumGate(QuantumInstruction):
 
     @property
     def matrix(self):
+        """Getter on the underlying unitary matrix."""
         return self._matrix
 
     @property
     def dim(self):
+        """Getter on the dimension of the quantum gate."""
         return self._matrix.shape[0]
 
     @property
     def parameters(self):
+        """Getter on the stored parameters."""
         return self._parameters
 
     @property
     def H(self):
+        """Hermitian conjugate operator."""
         return self._inverse_callable(self)

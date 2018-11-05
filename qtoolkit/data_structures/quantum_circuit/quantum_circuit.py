@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Implementation of the QuantumCircuit class."""
+
 import typing
 
 import networkx as nx
@@ -41,7 +43,10 @@ import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 class QuantumCircuit:
 
     def __init__(self, qubit_number: int) -> None:
+        """Initialise QuantumCircuit instances.
 
+        :param qubit_number: the number of qubits in the circuit.
+        """
         assert qubit_number > 0, "A circuit with less than 1 qubit cannot be " \
                                  "created."
 
@@ -50,35 +55,50 @@ class QuantumCircuit:
         self._node_counter = 0
 
         for i in range(qubit_number):
-            self._graph.add_node(self._node_counter, type="input")
+            self._graph.add_node(self._node_counter, type="input", qubit=i)
             self._node_counter += 1
 
         self._last_inserted_operations = list(range(qubit_number))
 
     def add_operation(self, operation: qop.QuantumOperation) -> None:
+        """Add an operation to the circuit.
 
+        :param operation: the operation to add to the QuantumCircuit instance.
+        """
         self._check_operation(operation)
-        current_node_ID = self._node_counter
+        current_node_id = self._node_counter
         self._graph.add_node(self._node_counter, type="op", op=operation)
         self._node_counter += 1
 
         # Create the target wire
         self._graph.add_edge(self._last_inserted_operations[operation.target],
-                             current_node_ID)
-        self._last_inserted_operations[operation.target] = current_node_ID
+                             current_node_id)
+        self._last_inserted_operations[operation.target] = current_node_id
 
         # Create the control wires
         for ctrl in operation.controls:
             self._graph.add_edge(self._last_inserted_operations[ctrl],
-                                 current_node_ID)
-            self._last_inserted_operations[ctrl] = current_node_ID
+                                 current_node_id)
+            self._last_inserted_operations[ctrl] = current_node_id
 
     def apply(self, gate: qgate.QuantumGate, target: int,
               controls: typing.Sequence[int] = ()) -> None:
+        """Apply a quantum operation to the circuit.
+
+        :param gate: the quantum gate to apply.
+        :param target: the qubit to apply the operation on.
+        :param controls: the control qubit(s).
+        """
 
         self.add_operation(qop.QuantumOperation(gate, target, controls))
 
     def _check_operation(self, operation: qop.QuantumOperation) -> None:
+        """Check if the operation is valid. If not, raise an exception.
+
+        :param operation: the operation to check for validity.
+        :raise IndexError: if the qubits of the operation (target or control(s))
+        are not within the range of the current instance.
+        """
         if operation.target >= self._qubit_number or operation.target < 0:
             raise IndexError(
                 f"The operation's target ({operation.target}) is not valid "
@@ -91,6 +111,10 @@ class QuantumCircuit:
                     "quantum circuit.")
 
     def pop(self) -> qop.QuantumOperation:
+        """Delete the last inserted operation and return it.
+
+        :return: the last inserted operation.
+        """
         if self._node_counter <= self._qubit_number:
             raise RuntimeError(
                 "Attempting to pop a QuantumOperation from an empty "
@@ -102,11 +126,21 @@ class QuantumCircuit:
 
     @property
     def operations(self):
+        """Getter on the operations performed in this quantum circuit.
+
+        :return: a generator that generates all the operations of the circuit.
+        """
         return (self._graph.nodes[i]['op'] for i in
                 range(self._qubit_number, self._node_counter))
 
     @property
     def matrix(self) -> numpy.ndarray:
+        """Getter on the unitary matrix representing the circuit.
+
+        The matrix is re-computed each time the property is called.
+
+        :return: the unitary matrix representing the current quantum circuit.
+        """
         ret = numpy.identity(2 ** self._qubit_number)
         for operation in self.operations:
             ret = ret @ operation.matrix(self._qubit_number)
@@ -114,4 +148,5 @@ class QuantumCircuit:
 
     @property
     def size(self):
+        """Getter on the number of qubits of the current instance."""
         return self._qubit_number
