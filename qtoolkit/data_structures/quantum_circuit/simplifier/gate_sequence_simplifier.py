@@ -31,7 +31,8 @@
 
 import typing
 
-from qtoolkit.data_structures.quantum_circuit.gate_hierarchy import QuantumGate
+from qtoolkit.data_structures.quantum_circuit.quantum_circuit import \
+    QuantumCircuit
 from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
     import \
     SimplificationRule
@@ -46,10 +47,24 @@ class GateSequenceSimplifier:
     def add_rule(self, rule: SimplificationRule) -> None:
         self._rules.append(rule)
 
-    def is_simplifiable(self, sequence: typing.List[QuantumGate]) -> bool:
-        return any((rule.is_simplifiable(sequence) for rule in self._rules))
+    def is_simplifiable(self, quantum_circuit: QuantumCircuit) -> bool:
+        for qubit_id in range(quantum_circuit.size):
+            current_sequence = list(
+                quantum_circuit.operations_on_qubit(qubit_id))
+            for rule in self._rules:
+                if rule.is_simplifiable(current_sequence):
+                    return True
+        return False
 
     def is_simplifiable_from_last(self,
-                                  sequence: typing.List[QuantumGate]) -> bool:
-        return any(
-            (rule.is_simplifiable_from_last(sequence) for rule in self._rules))
+                                  quantum_circuit: QuantumCircuit) -> bool:
+        last_inserted_op = quantum_circuit.last
+        qubits = last_inserted_op.controls
+        qubits.append(last_inserted_op.target)
+        for qubit_id in qubits:
+            current_sequence = list(
+                quantum_circuit.operations_on_qubit(qubit_id))
+            for rule in self._rules:
+                if rule.is_simplifiable_from_last(current_sequence):
+                    return True
+        return False

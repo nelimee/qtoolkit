@@ -35,6 +35,8 @@ import unittest
 
 import qtoolkit.utils.constants.quantum_gates as qgconsts
 import tests.qtestcase as qtest
+from qtoolkit.data_structures.quantum_circuit.quantum_circuit import \
+    QuantumCircuit
 from qtoolkit.data_structures.quantum_circuit.simplifier.gate_parameter import \
     GateParameter
 from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
@@ -49,10 +51,17 @@ class SimplificationRuleTestCase(qtest.QTestCase):
         self._rule_H_H = ['H', 'H']
         self._none_parameters_2 = [None] * 2
 
-        self._non_simplifiable_H_H = [qgconsts.H, qgconsts.X, qgconsts.X,
-                                      qgconsts.H]
-        self._simplifiable_H_H = [qgconsts.X, qgconsts.H, qgconsts.H,
-                                  qgconsts.X]
+        self._non_simplifiable_H_H = QuantumCircuit(1)
+        self._non_simplifiable_H_H.apply(qgconsts.H, 0)
+        self._non_simplifiable_H_H.apply(qgconsts.X, 0)
+        self._non_simplifiable_H_H.apply(qgconsts.X, 0)
+        self._non_simplifiable_H_H.apply(qgconsts.H, 0)
+
+        self._simplifiable_H_H = QuantumCircuit(1)
+        self._simplifiable_H_H.apply(qgconsts.X, 0)
+        self._simplifiable_H_H.apply(qgconsts.H, 0)
+        self._simplifiable_H_H.apply(qgconsts.H, 0)
+        self._simplifiable_H_H.apply(qgconsts.X, 0)
 
         self._rule_Rx_Rx = ['Rx', 'Rx']
         self._parameters_inversed_2 = [GateParameter(1, lambda x: x),
@@ -63,8 +72,10 @@ class SimplificationRuleTestCase(qtest.QTestCase):
 
     def test_is_simplifiable(self) -> None:
         sr = SimplificationRule(self._rule_H_H, self._none_parameters_2)
-        self.assertTrue(sr.is_simplifiable(self._simplifiable_H_H))
-        self.assertFalse(sr.is_simplifiable(self._non_simplifiable_H_H))
+        self.assertTrue(
+            sr.is_simplifiable(list(self._simplifiable_H_H.gates_on_qubit(0))))
+        self.assertFalse(sr.is_simplifiable(
+            list(self._non_simplifiable_H_H.gates_on_qubit(0))))
 
 
 if __name__ == '__main__':

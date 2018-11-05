@@ -89,7 +89,6 @@ class QuantumCircuit:
         :param target: the qubit to apply the operation on.
         :param controls: the control qubit(s).
         """
-
         self.add_operation(qop.QuantumOperation(gate, target, controls))
 
     def _check_operation(self, operation: qop.QuantumOperation) -> None:
@@ -125,6 +124,10 @@ class QuantumCircuit:
         return op
 
     @property
+    def last(self):
+        return self._graph.nodes[self._node_counter - 1]
+
+    @property
     def operations(self):
         """Getter on the operations performed in this quantum circuit.
 
@@ -132,6 +135,29 @@ class QuantumCircuit:
         """
         return (self._graph.nodes[i]['op'] for i in
                 range(self._qubit_number, self._node_counter))
+
+    def operations_on_qubit(self, qubit_index: int):
+        """Getter for the operations applied on the qubit at the given index.
+
+        Warning: for the moment this method does not use fully the graph
+        structure of the QuantumCircuit class and so iterate on all the quantum
+        operations.
+
+        :param qubit_index: the qubit we are interested in.
+        """
+        return filter(lambda op: op.target == qubit_index, self.operations)
+
+    def gates_on_qubit(self, qubit_index: int):
+        """Getter for the gates applied on the qubit at the given index.
+
+        Warning: for the moment this method does not use fully the graph
+        structure of the QuantumCircuit class and so iterate on all the quantum
+        operations.
+
+        :param qubit_index: the qubit we are interested in.
+        :return:
+        """
+        return (op.gate for op in self.operations_on_qubit(qubit_index))
 
     @property
     def matrix(self) -> numpy.ndarray:
