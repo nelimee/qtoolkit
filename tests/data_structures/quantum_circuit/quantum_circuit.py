@@ -51,6 +51,7 @@ class QuantumCircuitTestCase(qtest.QTestCase):
     def setUp(self):
         self._circ1 = qcirc.QuantumCircuit(1)
         self._circ3 = qcirc.QuantumCircuit(3)
+        self._circ3_2 = qcirc.QuantumCircuit(3)
 
     def test_construction_negative_qubit_number(self) -> None:
         with self.assertRaises(AssertionError):
@@ -156,6 +157,16 @@ class QuantumCircuitTestCase(qtest.QTestCase):
         self.assertEqual(len(qop.controls), 1)
         self.assertEqual(qop.controls[0], 2)
 
+    def test_iadd_empty(self) -> None:
+        self._circ3 += self._circ3_2
+        self.assertFalse(list(self._circ3.operations))
+
+    def test_iadd_simple(self) -> None:
+        self._circ3.apply(qgconsts.X, 0)
+        self._circ3_2.apply(qgconsts.X, 1)
+        self._circ3 += self._circ3_2
+        matrix = self._chained_left_kron(mconsts.X, mconsts.X, mconsts.ID2)
+        self.assertAllClose(self._circ3.matrix, matrix)
 
 if __name__ == '__main__':
     unittest.main()
