@@ -46,7 +46,7 @@ class GateHierarchyTestCase(qtest.QTestCase):
 
     def test_creation_gate_no_parameters(self) -> None:
         """Test if construction of QuantumGate without parameter works."""
-        qgate = qgates.QuantumGate("qgate", mconsts.X)
+        qgate = qgates.QuantumGate("qgate", mconsts.X, lambda X: X)
 
     def test_creation_gate_parameters(self) -> None:
         """Test if construction of QuantumGate with parameter(s) works."""
@@ -65,22 +65,22 @@ class GateHierarchyTestCase(qtest.QTestCase):
 
     def test_gate_matrix(self) -> None:
         """Test if QuantumGate's matrix attribute is right."""
-        qgate = qgates.QuantumGate("qgate", mconsts.X)
+        qgate = qgates.QuantumGate("qgate", mconsts.X, lambda X: X)
         self.assertAllClose(qgate.matrix, mconsts.X)
 
     def test_gate_parameter_empty(self) -> None:
         """Test if QuantumGate's parameters attribute is right."""
-        qgate = qgates.QuantumGate("qgate", mconsts.X)
+        qgate = qgates.QuantumGate("qgate", mconsts.X, lambda X: X)
         self.assertFalse(qgate.parameters)
 
     def test_gate_name(self) -> None:
         """Test if QuantumGate's name attribute is right."""
-        qgate = qgates.QuantumGate("qgate", mconsts.X)
+        qgate = qgates.QuantumGate("qgate", mconsts.X, lambda X: X)
         self.assertEqual(qgate.name, "qgate")
 
     def test_gate_dim(self) -> None:
         """Test if QuantumGate's dim attribute is right."""
-        qgate = qgates.QuantumGate("qgate", mconsts.X)
+        qgate = qgates.QuantumGate("qgate", mconsts.X, lambda X: X)
         self.assertEqual(qgate.dim, 2)
 
     def test_parametrised_gate_name(self) -> None:

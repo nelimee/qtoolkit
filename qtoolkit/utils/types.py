@@ -57,7 +57,8 @@ SO3Vector = numpy.ndarray
 SUdMatrix = GenericMatrix
 
 SUdMatrixGenerator = typing.Union[SUdMatrix, typing.Callable[..., SUdMatrix]]
-
+UnitaryMatrixGenerator = typing.Union[
+    UnitaryMatrix, typing.Callable[..., UnitaryMatrix]]
 SUMatrix = GenericMatrix
 
 GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]

@@ -32,14 +32,23 @@
 import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
 import qtoolkit.utils.constants.matrices as mconsts
 
-X = qgates.QuantumGate('X', mconsts.X)
-Y = qgates.QuantumGate('Y', mconsts.Y)
-Z = qgates.QuantumGate('Z', mconsts.Z)
-H = qgates.QuantumGate('H', mconsts.H)
-S = qgates.QuantumGate('S', mconsts.S)
-T = qgates.QuantumGate('T', mconsts.T)
-ID = qgates.QuantumGate('Id', mconsts.ID2)
-CX = qgates.QuantumGate('CX', mconsts.CX)
 
-CX_ctrl = qgates.QuantumGate("CX_ctrl", mconsts.ID2)
-CX_trgt = qgates.QuantumGate("CX_trgt", mconsts.ID2)
+def _self_inverse(gate: qgates.QuantumGate) -> qgates.QuantumGate:
+    return gate
+
+
+def _generic_inverse(gate: qgates.QuantumGate) -> qgates.QuantumGate:
+    return qgates.QuantumGate(gate.name + '+', gate.matrix.T.conj(),
+                              lambda self: gate, parameters=gate.parameters)
+
+
+X = qgates.QuantumGate('X', mconsts.X, _self_inverse)
+Y = qgates.QuantumGate('Y', mconsts.Y, _self_inverse)
+Z = qgates.QuantumGate('Z', mconsts.Z, _self_inverse)
+H = qgates.QuantumGate('H', mconsts.H, _self_inverse)
+S = qgates.QuantumGate('S', mconsts.S, _generic_inverse)
+T = qgates.QuantumGate('T', mconsts.T, _generic_inverse)
+ID = qgates.QuantumGate('Id', mconsts.ID2, _self_inverse)
+CX = qgates.QuantumGate('CX', mconsts.CX, _self_inverse)  #
+# CX_ctrl = qgates.QuantumGate("CX_ctrl", mconsts.ID2)
+# CX_trgt = qgates.QuantumGate("CX_trgt", mconsts.ID2)

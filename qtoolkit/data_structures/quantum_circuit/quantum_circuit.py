@@ -29,73 +29,185 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-from collections import deque
-from typing import List, Union, Tuple
+"""Implementation of the QuantumCircuit class."""
 
-import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
-import qtoolkit.utils.constants.quantum_gates as qgconsts
+import typing
+
+import networkx as nx
+import numpy
+
+import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgate
+import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 
 
 class QuantumCircuit:
 
     def __init__(self, qubit_number: int) -> None:
-        assert qubit_number > 0, "The circuit should have at least 1 qubit."
-        self._last_inserted_index: Union[int, Tuple[int, int]] = None
-        self._qubits = [list() for _ in range(qubit_number)]
-        self._insertion_order = deque()
+        """Initialise QuantumCircuit instances.
 
-    def apply(self, quantum_gate: qgates.QuantumGate,
-              qubits: List[int]) -> None:
-        assert len(qubits) == 1 or (
-            len(qubits) == 2 and quantum_gate.name == 'CX'), (
-            "The QuantumCircuit class only supports one-qubit gates and CX.")
-        assert quantum_gate.dim == 2 ** len(qubits), (
-            "The quantum gate dimension does not match the number of qubits "
-            "given.")
-        for qubit in qubits:
-            if not 0 <= qubit < len(self._qubits):
+        :param qubit_number: the number of qubits in the circuit.
+        """
+        assert qubit_number > 0, "A circuit with less than 1 qubit cannot be " \
+                                 "created."
+
+        self._qubit_number = qubit_number
+        self._graph = nx.DiGraph()
+        self._node_counter = 0
+
+        for i in range(qubit_number):
+            self._graph.add_node(self._node_counter, type="input", qubit=i)
+            self._node_counter += 1
+
+        self._last_inserted_operations = list(range(qubit_number))
+
+    def add_operation(self, operation: qop.QuantumOperation) -> None:
+        """Add an operation to the circuit.
+
+        :param operation: the operation to add to the QuantumCircuit instance.
+        """
+        self._check_operation(operation)
+        current_node_id = self._node_counter
+        self._graph.add_node(self._node_counter, type="op", op=operation)
+        self._node_counter += 1
+
+        # Create the target wire
+        self._graph.add_edge(self._last_inserted_operations[operation.target],
+                             current_node_id)
+        self._last_inserted_operations[operation.target] = self._node_counter
+
+        # Create the control wires
+        for ctrl in operation.controls:
+            self._graph.add_edge(self._last_inserted_operations[ctrl],
+                                 current_node_id)
+            self._last_inserted_operations[ctrl] = self._node_counter
+
+    def apply(self, gate: qgate.QuantumGate, target: int,
+              controls: typing.Sequence[int] = ()) -> None:
+        """Apply a quantum operation to the circuit.
+
+        :param gate: the quantum gate to apply.
+        :param target: the qubit to apply the operation on.
+        :param controls: the control qubit(s).
+        """
+        self.add_operation(qop.QuantumOperation(gate, target, controls))
+
+    def _check_operation(self, operation: qop.QuantumOperation) -> None:
+        """Check if the operation is valid. If not, raise an exception.
+
+        :param operation: the operation to check for validity.
+        :raise IndexError: if the qubits of the operation (target or control(s))
+        are not within the range of the current instance.
+        """
+        if operation.target >= self._qubit_number or operation.target < 0:
+            raise IndexError(
+                f"The operation's target ({operation.target}) is not valid "
+                f"for the current quantum circuit with {self._qubit_number} "
+                f"qubits.")
+        for ctrl in operation.controls:
+            if ctrl >= self._qubit_number or ctrl < 0:
                 raise IndexError(
-                    f"The qubit n°{qubit} is out of range for the current "
-                    f"quantum circuit.")
-        self._insertion_order.append(qubits)
-        if len(qubits) == 1:
-            # If it is a 1-qubit gate.
-            idx = qubits[0]
-            self._last_inserted_index = idx
-            self._qubits[idx].append(quantum_gate)
-        else:
-            # Else it is CX
-            ctrl, trgt = qubits[0], qubits[1]
-            self._last_inserted_index = (ctrl, trgt)
-            self._qubits[ctrl].append(qgconsts.CX_ctrl)
-            self._qubits[trgt].append(qgconsts.CX_trgt)
+                    "One of the control qubit is not valid for the current "
+                    "quantum circuit.")
 
-    def remove_last_inserted(self) -> None:
-        if not self._insertion_order:
-            raise RuntimeError(
-                "Impossible to remove the last inserted gate as there is no "
-                "gate in the circuit.")
-        for qubit_idx in self._insertion_order.pop():
-            self._qubits[qubit_idx].pop()
+    def pop(self) -> qop.QuantumOperation:
+        """Delete the last inserted operation and return it.
 
-    def get_last_modified_qubits(self) -> Union[
-        Tuple[List[qgates.QuantumGate]], Tuple[
-            List[qgates.QuantumGate], List[qgates.QuantumGate]]]:
-        if self._last_inserted_index is None:
+        :return: the last inserted operation.
+        """
+        if self._node_counter <= self._qubit_number:
             raise RuntimeError(
-                "[QuantumCircuit.get_last_modified_qubits] Attempting to "
-                "acces the last modified qubit of a quantum circuit but no "
-                "operation as been performed on this circuit.")
-        if isinstance(self._last_inserted_index, int):
-            return self._qubits[self._last_inserted_index],
-        else:
-            return (self._qubits[self._last_inserted_index[0]],
-                    self._qubits[self._last_inserted_index[1]])
+                "Attempting to pop a QuantumOperation from an empty "
+                "QuantumCircuit.")
+        op = self._graph.nodes[self._node_counter - 1]['op']
+        self._graph.remove_node(self._node_counter - 1)
+        self._node_counter -= 1
+        return op
+
+    @property
+    def last(self):
+        return self._graph.nodes[self._node_counter - 1]
+
+    @property
+    def operations(self):
+        """Getter on the operations performed in this quantum circuit.
+
+        :return: a generator that generates all the operations of the circuit.
+        """
+        return (self._graph.nodes[i]['op'] for i in
+                range(self._qubit_number, self._node_counter))
+
+    def operations_on_qubit(self, qubit_index: int):
+        """Getter for the operations applied on the qubit at the given index.
+
+        Warning: for the moment this method does not use fully the graph
+        structure of the QuantumCircuit class and so iterate on all the quantum
+        operations.
+
+        :param qubit_index: the qubit we are interested in.
+        """
+        return filter(lambda op: op.target == qubit_index, self.operations)
+
+    def gates_on_qubit(self, qubit_index: int):
+        """Getter for the gates applied on the qubit at the given index.
+
+        Warning: for the moment this method does not use fully the graph
+        structure of the QuantumCircuit class and so iterate on all the quantum
+        operations.
+
+        :param qubit_index: the qubit we are interested in.
+        :return:
+        """
+        return (op.gate for op in self.operations_on_qubit(qubit_index))
+
+    @property
+    def matrix(self) -> numpy.ndarray:
+        """Getter on the unitary matrix representing the circuit.
+
+        The matrix is re-computed each time the property is called.
+
+        :return: the unitary matrix representing the current quantum circuit.
+        """
+        ret = numpy.identity(2 ** self._qubit_number)
+        for operation in self.operations:
+            ret = ret @ operation.matrix(self._qubit_number)
+        return ret
 
     @property
     def size(self):
-        return len(self._qubits)
+        """Getter on the number of qubits of the current instance."""
+        return self._qubit_number
 
-    @property
-    def qubits(self):
-        return self._qubits
+    def __iadd__(self, other: 'QuantumCircuit') -> 'QuantumCircuit':
+        """Add all the operations contained in other to the current instance.
+
+        :param other: the quantum circuit containing the operations to append
+        to the current instance.
+        :return: The union of self and other.
+        """
+        # 1. Checks
+        if self.size != other.size:
+            raise RuntimeError(
+                f"The number of qubits of the first circuit ({self.size}) does "
+                f"not match the number of qubits of the second circuit "
+                f"({other.size}).")
+        # 2. Update the graph
+        # 2.1. First remove the "input" nodes from the other graph. We don't
+        # want to change or copy the other graph so we take a view of the other
+        # graph without the "input" nodes.
+        other_subgraph = other._graph.subgraph(
+            range(other.size, other._node_counter))
+        # 2.2. Regroup the two graphs into one graph.
+        self._graph = nx.disjoint_union(self._graph, other_subgraph)
+        # 2.3. Join the nodes if possible.
+        for qubit_index in range(self.size):
+            old_neighbor = list(other._graph.neighbors(qubit_index))
+            if old_neighbor:
+                new_neighbor = old_neighbor[0] - other.size + self._node_counter
+                self._graph.add_edge(
+                    self._last_inserted_operations[qubit_index], new_neighbor)
+                # Only change the last inserted index if we joined the nodes.
+                self._last_inserted_operations[qubit_index] = new_neighbor
+        # 3. Update the other attributes:
+        self._node_counter += other._node_counter - other.size
+
+        return self
