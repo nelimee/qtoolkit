@@ -161,7 +161,10 @@ class QuantumCircuit:
 
     @property
     def last(self):
-        return self._graph.nodes[self._node_counter - 1]['op']
+        if self._node_counter > self._qubit_number:
+            return self._graph.nodes[self._node_counter - 1]['op']
+        else:
+            return None
 
     @property
     def operations(self):
