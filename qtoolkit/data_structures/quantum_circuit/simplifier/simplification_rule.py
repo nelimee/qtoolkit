@@ -31,12 +31,8 @@
 
 """Implements the SimplificationRule class."""
 
-import math
-import typing
-
-import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as gates
-from qtoolkit.data_structures.quantum_circuit.simplifier.gate_parameter import \
-    GateParameter
+import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgate
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 
 GateIdentifier = str
 
@@ -44,132 +40,109 @@ GateIdentifier = str
 class SimplificationRule:
     """Representation of a generic simplification rule."""
 
-    def __init__(self, rule: typing.List[GateIdentifier],
-                 parameters: typing.List[
-                     typing.Optional[GateParameter]]) -> None:
-        """Initialise the SimplificationRule class.
+    def is_simplifiable(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
+        """Check if the given quantum circuit is simplifiable.
 
-        :param rule: each string in the list represents a quantum gate. The
-        sequence represented by this list of strings is "simplifiable".
-        :param parameters: a list of optional parameters. If rule[i] represents
-        a parametrised quantum gate then parameters[i] represents a rule that
-        needs to be checked for the sequence to be simplifiable. Each parameter
-        has an identifier and a transformation function. The real value of a
-        parameter is obtained by calling the transformation function on the
-        corresponding gate parameters. For a rule to be fulfilled, all the
-        parameters with the same identifier should have the same real value
-        (up to machine precision).
-        """
-        self._rule = rule
-        self._has_parameters = any(parameters)
-        self._parameters = parameters
-
-    def is_simplifiable(self, quantum_gate_sequence: typing.List[
-        gates.QuantumGate]) -> bool:
-        """Check if the given sequence is simplifiable.
-
-        :param quantum_gate_sequence: the sequence of quantum gates to check for
+        :param quantum_circuit: the quantum circuit to check for
         simplifiability.
-        :return: True if the sequence is simplifiable according to the rule
-        stored, else False.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
         """
-        # If there are not enough gates in the sequence to apply the rule then
-        # the sequence is not simplifiable.
-        if len(quantum_gate_sequence) < len(self._rule):
-            return False
+        raise NotImplementedError("This method should be overridden.")
 
-        # We try to find a subsequence in the given sequence that may be
-        # simplifiable.
-        sequence_str = '_'.join([gate.name for gate in quantum_gate_sequence])
-        rule_str = '_'.join(self._rule)
-        position = sequence_str.find(rule_str)
-        # If there is no sequence that match, we are done.
-        if position == -1:
-            return False
+    def is_simplifiable_from_last(self,
+                                  quantum_circuit: qcirc.QuantumCircuit) -> \
+        bool:
+        """Check if the last part of the given quantum circuit is simplifiable.
 
-        # Else, there is at least one sequence. If the gates in the rule don't
-        # have parameters, then we can directly return True.
-        elif not self._has_parameters:
-            return True
-
-        # Else, while there is a potentially simplifiable sequence we need to
-        # check if the parameters make this sequence simplifiable.
-        while position != -1:
-            sequence = quantum_gate_sequence[
-                       position:position + len(self._rule)]
-            # We already checked for gate names, then we just need to check for
-            # parameters.
-            if self._are_parameters_valid(sequence):
-                return True
-            position = sequence_str.find(rule_str, position)
-
-    def is_simplifiable_from_last(self, quantum_gate_sequence: typing.List[
-        gates.QuantumGate]) -> bool:
-        """Check if the last part of the given sequence is simplifiable.
-
-        This method can be used to check if the last gate of the sequence
+        This method can be used to check if the last gate of the quantum circuit
         introduced a possible simplification or not.
 
-        :param quantum_gate_sequence: the sequence of quantum gates to check for
+        :param quantum_circuit: the quantum circuit to check for
         simplifiability.
-        :return: True if the sequence is simplifiable according to the rule
-        stored, else False.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
         """
-        # If there are not enough gates in the sequence to apply the rule then
-        # the sequence is not simplifiable.
-        if len(quantum_gate_sequence) < len(self._rule):
+        raise NotImplementedError("This method should be overridden.")
+
+
+class InverseRule(SimplificationRule):
+
+    def __init__(self, quantum_gate: qgate.QuantumGate) -> None:
+        self._gate = quantum_gate
+        self._inverse = quantum_gate.H
+
+    def is_simplifiable_from_last(self,
+                                  quantum_circuit: qcirc.QuantumCircuit) -> \
+        bool:
+        """Check if the last part of the given quantum circuit is simplifiable.
+
+        This method can be used to check if the last gate of the quantum circuit
+        introduced a possible simplification or not.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        last = quantum_circuit.last
+        opgen = quantum_circuit.get_n_last_operations_on_qubit(2, last.target)
+        op_names = [op.gate.name for op in opgen]
+        if len(op_names) < 2:
+            return False
+        forward = self._gate.name == op_names[0] and self._inverse.name == \
+                  op_names[1]
+        backward = self._inverse.name == op_names[0] and self._gate.name == \
+                   op_names[1]
+        return forward or backward
+
+    def is_simplifiable(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
+        """Check if the given quantum circuit is simplifiable.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        raise NotImplementedError("This method should be overridden.")
+
+
+class CXInverseRule(SimplificationRule):
+
+    def is_simplifiable(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
+        """Check if the given quantum circuit is simplifiable.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        raise NotImplementedError("This method should be overridden.")
+
+    def is_simplifiable_from_last(self,
+                                  quantum_circuit: qcirc.QuantumCircuit) -> \
+        bool:
+        """Check if the last part of the given quantum circuit is simplifiable.
+
+        This method can be used to check if the last gate of the quantum circuit
+        introduced a possible simplification or not.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        last = quantum_circuit.last
+        operations = list(
+            quantum_circuit.get_n_last_operations_on_qubit(2, last.target))
+        if len(operations) < 2:
             return False
 
-        return self.is_simplifiable_exact_length(
-            quantum_gate_sequence[-len(self._rule):])
+        op1, op2 = operations[0], operations[1]
 
-    def is_simplifiable_exact_length(self, quantum_gate_sequence: typing.List[
-        gates.QuantumGate]) -> bool:
-        """Check if the given sequence is simplifiable.
-
-        The given sequence needs to have exactly the same length as the rule
-        represented by the instance this method is called on.
-
-        :param quantum_gate_sequence: the sequence of quantum gates to check for
-        simplifiability.
-        :return: True if the sequence is simplifiable according to the rule
-        stored, else False.
-        """
-
-        assert len(quantum_gate_sequence) == len(self._rule)
-
-        # Check the gates identifiers
-        for idx, gate in enumerate(quantum_gate_sequence):
-            if gate.name != self._rule[idx]:
-                return False
-
-        return self._are_parameters_valid(quantum_gate_sequence)
-
-    def _are_parameters_valid(self, quantum_gate_sequence: typing.List[
-        gates.QuantumGate]) -> bool:
-        """Check if the parameters match the simplification rule or not.
-
-        :param quantum_gate_sequence: the sequence of quantum gates to check for
-        simplifiability. The sequence should have the exact same length as the
-        stored rule.
-        :return: True if the parameters of the sequence match the simplification
-        rule, else False.
-        """
-        # Check the gates parameters
-        parameters = dict()
-        for idx, gate in enumerate(quantum_gate_sequence):
-            is_parametrised = (gate.parameters is not None and self._parameters[
-                idx] is not None)
-            if not is_parametrised:
-                continue
-            # Recover the parameter's data.
-            parameter_ID = self._parameters[idx].id
-            parameter_value = self._parameters[idx].apply_transformation(
-                gate.parameters[0])
-            # Check the parameter value.
-            if parameter_ID not in parameters:
-                parameters[parameter_ID] = parameter_value
-            elif not math.isclose(parameters[parameter_ID], parameter_value):
-                return False
-
-        return True
+        result = True
+        result &= (op1.gate.name == 'X' and op2.gate.name == 'X')
+        result &= (op1.target == op2.target)
+        result &= (len(op1.controls) == 1 and len(op2.controls) == 1 and
+                   op1.controls[0] == op2.controls[0])
+        return result
