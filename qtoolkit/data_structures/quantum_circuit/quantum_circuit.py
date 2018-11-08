@@ -84,8 +84,9 @@ class QuantumCircuit:
                               current_node_id, ctrl)
             self._last_inserted_operations[ctrl] = current_node_id
 
-        # The stored matrix is now invalidated.
-        self._matrix = None
+        # Compute the new matrix if needed and possible.
+        if self._cache_matrix and self._matrix is not None:
+            self._matrix = self._matrix @ operation.matrix(self._qubit_number)
 
     def apply(self, gate: qgate.QuantumGate, target: int,
               controls: typing.Sequence[int] = ()) -> None:
@@ -133,8 +134,9 @@ class QuantumCircuit:
         # Remove the node (and the edges associated to it).
         self._graph.remove_node(self._node_counter - 1)
         self._node_counter -= 1
-        # The stored matrix is now invalidated.
-        self._matrix = None
+        # Compute the new matrix if needed and possible.
+        if self._cache_matrix and self._matrix is not None:
+            self._matrix = self._matrix @ op.matrix(self._qubit_number).T.conj()
         return op
 
     def _create_edge(self, from_id: int, to_id: int, qubit_id: int) -> None:
