@@ -42,7 +42,7 @@ from qtoolkit.data_structures.quantum_circuit.gate_hierarchy import QuantumGate
 class QuantumOperation:
     """A class representing a quantum operation."""
     def __init__(self, gate: QuantumGate, target: int,
-                 controls: typing.Sequence[int] = tuple()) -> None:
+                 controls: typing.Sequence[int] = None) -> None:
         """Initialise the QuantumOperation instance.
 
         For the moment, the QuantumOperation class only support 1-qubit gates
@@ -54,6 +54,8 @@ class QuantumOperation:
         :param target: the target qubit of the given quantum gate.
         :param controls: an arbitrary number of control qubits.
         """
+        if controls is None:
+            controls = list()
         assert target not in controls, "The target qubit cannot be used as a " \
                                        "control qubit."
         self._gate = gate

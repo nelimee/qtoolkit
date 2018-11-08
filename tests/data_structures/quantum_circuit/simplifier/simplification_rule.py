@@ -33,49 +33,82 @@
 
 import unittest
 
+import qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
+    as sr
 import qtoolkit.utils.constants.quantum_gates as qgconsts
 import tests.qtestcase as qtest
 from qtoolkit.data_structures.quantum_circuit.quantum_circuit import \
     QuantumCircuit
-from qtoolkit.data_structures.quantum_circuit.simplifier.gate_parameter import \
-    GateParameter
-from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
-    import \
-    SimplificationRule
 
 
 class SimplificationRuleTestCase(qtest.QTestCase):
     """Unit-tests for the SimplificationRule class."""
 
-    def setUp(self):
-        self._rule_H_H = ['H', 'H']
-        self._none_parameters_2 = [None] * 2
+    def test_initialisation_simple_inverse_rule(self) -> None:
+        sr.InverseRule(qgconsts.H)
+        sr.InverseRule(qgconsts.T)
+        sr.InverseRule(qgconsts.X)
+        sr.InverseRule(qgconsts.Y)
+        sr.InverseRule(qgconsts.Z)
+        sr.InverseRule(qgconsts.S)
 
-        self._non_simplifiable_H_H = QuantumCircuit(1)
-        self._non_simplifiable_H_H.apply(qgconsts.H, 0)
-        self._non_simplifiable_H_H.apply(qgconsts.X, 0)
-        self._non_simplifiable_H_H.apply(qgconsts.X, 0)
-        self._non_simplifiable_H_H.apply(qgconsts.H, 0)
+    def test_initialisation_simple_inverse_rule_inverse(self) -> None:
+        sr.InverseRule(qgconsts.H.H)
+        sr.InverseRule(qgconsts.T.H)
+        sr.InverseRule(qgconsts.X.H)
+        sr.InverseRule(qgconsts.Y.H)
+        sr.InverseRule(qgconsts.Z.H)
+        sr.InverseRule(qgconsts.S.H)
 
-        self._simplifiable_H_H = QuantumCircuit(1)
-        self._simplifiable_H_H.apply(qgconsts.X, 0)
-        self._simplifiable_H_H.apply(qgconsts.H, 0)
-        self._simplifiable_H_H.apply(qgconsts.H, 0)
-        self._simplifiable_H_H.apply(qgconsts.X, 0)
+    def test_initialisation_simple_CX_rule(self) -> None:
+        sr.CXInverseRule()
 
-        self._rule_Rx_Rx = ['Rx', 'Rx']
-        self._parameters_inversed_2 = [GateParameter(1, lambda x: x),
-                                       GateParameter(1, lambda x: -x)]
+    def test_is_simplifiable_from_last_inverse_rule_empty_circuit(self) -> None:
+        simpl_HH = sr.InverseRule(qgconsts.H)
+        empty_circuit = QuantumCircuit(1)
+        self.assertFalse(simpl_HH.is_simplifiable_from_last(empty_circuit))
 
-    def test_initialisation_simple(self) -> None:
-        SimplificationRule(self._rule_H_H, self._none_parameters_2)
+    def test_is_simplifiable_from_last_inverse_rule(self) -> None:
+        # Rule creation
+        simpl_HH = sr.InverseRule(qgconsts.H)
+        simpl_XX = sr.InverseRule(qgconsts.X)
 
-    def test_is_simplifiable(self) -> None:
-        sr = SimplificationRule(self._rule_H_H, self._none_parameters_2)
-        self.assertTrue(
-            sr.is_simplifiable(list(self._simplifiable_H_H.gates_on_qubit(0))))
-        self.assertFalse(sr.is_simplifiable(
-            list(self._non_simplifiable_H_H.gates_on_qubit(0))))
+        quantum_circuit = QuantumCircuit(1)
+        quantum_circuit.apply(qgconsts.X, 0)
+        self.assertFalse(simpl_HH.is_simplifiable_from_last(quantum_circuit))
+        self.assertFalse(simpl_XX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.H, 0)
+        self.assertFalse(simpl_HH.is_simplifiable_from_last(quantum_circuit))
+        self.assertFalse(simpl_XX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.H, 0)
+        self.assertTrue(simpl_HH.is_simplifiable_from_last(quantum_circuit))
+        self.assertFalse(simpl_XX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 0)
+        self.assertFalse(simpl_HH.is_simplifiable_from_last(quantum_circuit))
+        self.assertFalse(simpl_XX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 0)
+        self.assertFalse(simpl_HH.is_simplifiable_from_last(quantum_circuit))
+        self.assertTrue(simpl_XX.is_simplifiable_from_last(quantum_circuit))
+
+    def test_is_simplifiable_CX_inverse_rule(self) -> None:
+        # Rule creation
+        simpl_CX = sr.CXInverseRule()
+
+        quantum_circuit = QuantumCircuit(2)
+        quantum_circuit.apply(qgconsts.X, 0)
+        self.assertFalse(simpl_CX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 0, [1])
+        self.assertFalse(simpl_CX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 0)
+        self.assertFalse(simpl_CX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 0, [1])
+        self.assertFalse(simpl_CX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 0, [1])
+        self.assertTrue(simpl_CX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 0, [1])
+        self.assertTrue(simpl_CX.is_simplifiable_from_last(quantum_circuit))
+        quantum_circuit.apply(qgconsts.X, 1, [0])
+        self.assertFalse(simpl_CX.is_simplifiable_from_last(quantum_circuit))
 
 
 if __name__ == '__main__':

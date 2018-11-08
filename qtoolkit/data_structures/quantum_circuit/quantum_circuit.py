@@ -31,6 +31,7 @@
 
 """Implementation of the QuantumCircuit class."""
 
+import copy
 import typing
 
 import networkx as nx
@@ -42,7 +43,7 @@ import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 
 class QuantumCircuit:
 
-    def __init__(self, qubit_number: int) -> None:
+    def __init__(self, qubit_number: int, cache_matrix: bool = True) -> None:
         """Initialise QuantumCircuit instances.
 
         :param qubit_number: the number of qubits in the circuit.
@@ -51,14 +52,16 @@ class QuantumCircuit:
                                  "created."
 
         self._qubit_number = qubit_number
-        self._graph = nx.DiGraph()
+        self._graph = nx.MultiDiGraph()
         self._node_counter = 0
 
-        for i in range(qubit_number):
-            self._graph.add_node(self._node_counter, type="input", qubit=i)
+        for qubit_id in range(qubit_number):
+            self._graph.add_node(self._node_counter, type="input", key=qubit_id)
             self._node_counter += 1
 
         self._last_inserted_operations = list(range(qubit_number))
+        self._cache_matrix = cache_matrix
+        self._matrix = None
 
     def add_operation(self, operation: qop.QuantumOperation) -> None:
         """Add an operation to the circuit.
@@ -71,15 +74,19 @@ class QuantumCircuit:
         self._node_counter += 1
 
         # Create the target wire
-        self._graph.add_edge(self._last_inserted_operations[operation.target],
-                             current_node_id)
-        self._last_inserted_operations[operation.target] = self._node_counter
+        self._create_edge(self._last_inserted_operations[operation.target],
+                          current_node_id, operation.target)
+        self._last_inserted_operations[operation.target] = current_node_id
 
         # Create the control wires
         for ctrl in operation.controls:
-            self._graph.add_edge(self._last_inserted_operations[ctrl],
-                                 current_node_id)
-            self._last_inserted_operations[ctrl] = self._node_counter
+            self._create_edge(self._last_inserted_operations[ctrl],
+                              current_node_id, ctrl)
+            self._last_inserted_operations[ctrl] = current_node_id
+
+        # Compute the new matrix if needed and possible.
+        if self._cache_matrix and self._matrix is not None:
+            self._matrix = self._matrix @ operation.matrix(self._qubit_number)
 
     def apply(self, gate: qgate.QuantumGate, target: int,
               controls: typing.Sequence[int] = ()) -> None:
@@ -118,14 +125,48 @@ class QuantumCircuit:
             raise RuntimeError(
                 "Attempting to pop a QuantumOperation from an empty "
                 "QuantumCircuit.")
-        op = self._graph.nodes[self._node_counter - 1]['op']
+        # Recover the last operation performed.
+        op = self.last
+        # Update the last_inserted structure
+        for pred, _, key in self._graph.in_edges(nbunch=self._node_counter - 1,
+                                                 keys=True):
+            self._last_inserted_operations[key] = pred
+        # Remove the node (and the edges associated to it).
         self._graph.remove_node(self._node_counter - 1)
         self._node_counter -= 1
+        # Compute the new matrix if needed and possible.
+        if self._cache_matrix and self._matrix is not None:
+            self._matrix = self._matrix @ op.matrix(self._qubit_number).T.conj()
         return op
+
+    def _create_edge(self, from_id: int, to_id: int, qubit_id: int) -> None:
+        self._graph.add_edge(from_id, to_id, key=qubit_id)
+
+    def get_n_last_operations_on_qubit(self, n: int, qubit_id: int):
+        """Returns an iterable on the n last operations performed on the qubit.
+
+        If there is not enough operations, returns all the operations.
+
+        :param n: number of operations to look for.
+        :param qubit_id: the qubit of interest.
+        :return: an iterable of at most n items.
+        """
+        current = self._last_inserted_operations[qubit_id]
+        while n > 0 and current >= self.size:
+            yield self._graph.nodes[current]['op']
+            n -= 1
+            # Update the current node.
+            current = next(filter(
+                lambda node_id: qubit_id in self._graph.get_edge_data(node_id,
+                                                                      current),
+                self._graph.predecessors(current)))
 
     @property
     def last(self):
-        return self._graph.nodes[self._node_counter - 1]
+        if self._node_counter > self._qubit_number:
+            return self._graph.nodes[self._node_counter - 1]['op']
+        else:
+            return None
 
     @property
     def operations(self):
@@ -170,6 +211,8 @@ class QuantumCircuit:
         ret = numpy.identity(2 ** self._qubit_number)
         for operation in self.operations:
             ret = ret @ operation.matrix(self._qubit_number)
+        if self._cache_matrix:
+            self._matrix = ret
         return ret
 
     @property
@@ -209,5 +252,19 @@ class QuantumCircuit:
                 self._last_inserted_operations[qubit_index] = new_neighbor
         # 3. Update the other attributes:
         self._node_counter += other._node_counter - other.size
+        if self._cache_matrix and (
+            self._matrix is not None or other._matrix is not None):
+            self._matrix = self.matrix @ other.matrix
 
         return self
+
+    def __copy__(self) -> 'QuantumCircuit':
+        cpy = QuantumCircuit(self._qubit_number,
+                             cache_matrix=self._cache_matrix)
+        cpy._graph = self._graph.copy()
+        cpy._node_counter = self._node_counter
+        cpy._last_inserted_operations = copy.copy(
+            self._last_inserted_operations)
+        if self._cache_matrix:
+            cpy._matrix = self._matrix
+        return cpy
