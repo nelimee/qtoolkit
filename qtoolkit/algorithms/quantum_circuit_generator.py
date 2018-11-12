@@ -37,7 +37,6 @@ import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 import \
     qtoolkit.data_structures.quantum_circuit.simplifier\
         .gate_sequence_simplifier as qsimpl
-import qtoolkit.utils.timeit as qtime
 
 
 def generate_all_quantum_circuits(basis: typing.Sequence[qop.QuantumOperation],
@@ -135,36 +134,3 @@ def _generate_all_variations(op: qop.QuantumOperation, qubit_number: int):
             for ctrl in itertools.chain(range(trgt),
                                         range(trgt + 1, qubit_number)):
                 yield qop.QuantumOperation(op.gate, trgt, [ctrl])
-
-
-if __name__ == '__main__':
-    import qtoolkit.utils.constants.quantum_gates as qgconsts
-    import \
-        qtoolkit.data_structures.quantum_circuit.simplifier\
-            .gate_sequence_simplifier as simpl
-    import \
-        qtoolkit.data_structures.quantum_circuit.simplifier\
-            .simplification_rule as sr
-
-    Hop = qop.QuantumOperation(qgconsts.H, 0)
-    Top = qop.QuantumOperation(qgconsts.T, 0)
-    Tinvop = qop.QuantumOperation(qgconsts.T.H, 0)
-    CXop = qop.QuantumOperation(qgconsts.X, 0, [1])
-    basis = [Hop, Tinvop, Top, CXop]
-
-    depth = 5
-    qubit_number = 3
-
-    H_inverse_rule = sr.InverseRule(qgconsts.H)
-    T_inverse_rule = sr.InverseRule(qgconsts.T)
-    CX_inverse_rule = sr.CXInverseRule()
-
-    simplifier = simpl.GateSequenceSimplifier(
-        [H_inverse_rule, T_inverse_rule, CX_inverse_rule])
-
-    timer = qtime.Timer()
-    timer.tic()
-    generated = [c for c in
-                 generate_all_quantum_circuits(basis, depth, qubit_number,
-                                               simplifier)]
-    timer.toc(f"Generated for depth={depth} and {qubit_number} qubits")
