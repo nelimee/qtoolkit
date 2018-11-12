@@ -63,7 +63,7 @@ class QuantumCircuit:
         self._cache_matrix = cache_matrix
         self._matrix = None
         if self._cache_matrix:
-            self._matrix = numpy.identity(self._qubit_number)
+            self._matrix = numpy.identity(2 ** self._qubit_number)
         self._compressed_graph = None
 
     def add_operation(self, operation: qop.QuantumOperation) -> None:
