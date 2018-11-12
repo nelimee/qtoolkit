@@ -31,43 +31,55 @@
 
 """Contains a wrapper for nearest-neighbours structures available in Python."""
 
+import copy
 import typing
 
+import annoy
 import numpy
 
-import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.utils.types as qtypes
 
 
 class NearestNeighbourStructure:
     """A generic and efficient data structure for nearest-neighbour requests."""
 
-    def __init__(self, matrices: numpy.ndarray, gate_sequences: numpy.ndarray,
-                 basis: typing.Sequence[qtypes.SUdMatrix]) -> None:
-        """Initialise the NNStructure instance.
+    def __init__(self, data_size: int) -> None:
+        """Initialise the NearestNeighbourStructure instance.
 
-        :param matrices: An array with shape (n,m) storing the n data points of
-        dimension m to be indexed. This array is **not** copied, modifications
-        will result in bogus results.
+        :param data_size: Length of item vector that will be indexed
         """
-        self._matrices = matrices
-        self._gate_sequences = gate_sequences
-        self._basis = basis
+        self._annoy_index = annoy.AnnoyIndex(data_size)
+        self._quantum_circuits = list()
 
-    def query(self, x: numpy.ndarray) -> typing.Tuple[
-        float, qgate_seq.QuantumGateSequence]:
-        """Query the underlying data structure for nearest-neighbour of X.
+    def add_item(self, index: int,
+                 quantum_circuit: qcirc.QuantumCircuit) -> None:
+        matrix = quantum_circuit.matrix
+        vector = numpy.concatenate((numpy.real(matrix).reshape((-1, 1)),
+                                    numpy.imag(matrix).reshape((-1, 1))))
+        self._annoy_index.add_item(index, vector)
+        self._quantum_circuits.append(copy.copy(quantum_circuit).compress())
 
-        For the moment, this method performs a brute-force search.
+    def build(self, tree_number: int = 10) -> None:
+        self._annoy_index.build(tree_number)
 
-        :param x: The point we are searching an approximation for.
-        :return: The distance of the found approximation along with the
-        index of the approximation.
+    def save(self, filename: str) -> None:
+        self._annoy_index.save(filename)
+
+    def load(self, filename: str) -> None:
+        self._annoy_index.load(filename)
+
+    def query(self, matrix: qtypes.UnitaryMatrix) -> typing.Tuple[
+        float, qcirc.QuantumCircuit]:
+        """Query the underlying data structure for nearest-neighbour of matrix.
+
+        :param matrix: The matrix we are searching an approximation for.
+        :return: The distance of the found approximation along with the index of
+        the approximation.
         """
-        # distances = qdists.fowler_distances(self._matrices, x)
-        distances = numpy.linalg.norm(self._matrices - x, axis=(1, 2))
-        index = numpy.argmin(distances)
-        dist = distances[index]
+        vector = numpy.concatenate((numpy.real(matrix).reshape((-1, 1)),
+                                    numpy.imag(matrix).reshape((-1, 1))))
+        nns, dists = self._annoy_index.get_nns_by_vector(vector, 1,
+                                                         include_distances=True)
 
-        return dist, qgate_seq.QuantumGateSequence(self._basis,
-                                                   self._gate_sequences[index])
+        return dists[0], self._quantum_circuits[nns[0]]
