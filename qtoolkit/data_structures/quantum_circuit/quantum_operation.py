@@ -31,6 +31,7 @@
 
 """Implementation of the QuantumOperation class."""
 
+import copy
 import typing
 
 import numpy
@@ -130,6 +131,18 @@ class QuantumOperation:
                     current_matrix = numpy.kron(current_matrix, mconsts.ID2)
             ret += current_matrix
         return ret
+
+    def inverse_inplace(self) -> 'QuantumOperation':
+        self._gate = self._gate.H
+        return self
+
+    def inverse(self) -> 'QuantumOperation':
+        cpy = copy.copy(self)
+        return cpy.inverse_inplace()
+
+    @property
+    def H(self):
+        return self.inverse()
 
 
 def control(operation: QuantumOperation, *controls: int) -> QuantumOperation:
