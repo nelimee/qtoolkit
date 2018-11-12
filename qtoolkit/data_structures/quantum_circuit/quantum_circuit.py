@@ -59,9 +59,12 @@ class QuantumCircuit:
             self._graph.add_node(self._node_counter, type="input", key=qubit_id)
             self._node_counter += 1
 
-        self._last_inserted_operations = list(range(qubit_number))
+        self._last_inserted_operations = numpy.arange(qubit_number)
         self._cache_matrix = cache_matrix
         self._matrix = None
+        if self._cache_matrix:
+            self._matrix = numpy.identity(self._qubit_number)
+        self._compressed_graph = None
 
     def add_operation(self, operation: qop.QuantumOperation) -> None:
         """Add an operation to the circuit.
@@ -85,7 +88,7 @@ class QuantumCircuit:
             self._last_inserted_operations[ctrl] = current_node_id
 
         # Compute the new matrix if needed and possible.
-        if self._cache_matrix and self._matrix is not None:
+        if self._cache_matrix:
             self._matrix = self._matrix @ operation.matrix(self._qubit_number)
 
     def apply(self, gate: qgate.QuantumGate, target: int,
@@ -135,7 +138,7 @@ class QuantumCircuit:
         self._graph.remove_node(self._node_counter - 1)
         self._node_counter -= 1
         # Compute the new matrix if needed and possible.
-        if self._cache_matrix and self._matrix is not None:
+        if self._cache_matrix:
             self._matrix = self._matrix @ op.matrix(self._qubit_number).T.conj()
         return op
 
@@ -208,11 +211,11 @@ class QuantumCircuit:
 
         :return: the unitary matrix representing the current quantum circuit.
         """
+        if self._cache_matrix:
+            return self._matrix
         ret = numpy.identity(2 ** self._qubit_number)
         for operation in self.operations:
             ret = ret @ operation.matrix(self._qubit_number)
-        if self._cache_matrix:
-            self._matrix = ret
         return ret
 
     @property
@@ -252,19 +255,97 @@ class QuantumCircuit:
                 self._last_inserted_operations[qubit_index] = new_neighbor
         # 3. Update the other attributes:
         self._node_counter += other._node_counter - other.size
-        if self._cache_matrix and (
-            self._matrix is not None or other._matrix is not None):
+        if self._cache_matrix and other._matrix is not None:
             self._matrix = self.matrix @ other.matrix
 
         return self
+
+    def __matmul__(self: 'QuantumCircuit',
+                   other: 'QuantumCircuit') -> 'QuantumCircuit':
+        cpy = copy.copy(self)
+        return cpy.__iadd__(other)
 
     def __copy__(self) -> 'QuantumCircuit':
         cpy = QuantumCircuit(self._qubit_number,
                              cache_matrix=self._cache_matrix)
         cpy._graph = self._graph.copy()
         cpy._node_counter = self._node_counter
-        cpy._last_inserted_operations = copy.copy(
-            self._last_inserted_operations)
+        cpy._last_inserted_operations = self._last_inserted_operations.copy()
         if self._cache_matrix:
             cpy._matrix = self._matrix
         return cpy
+
+    def compress(self) -> 'QuantumCircuit':
+        if self._graph is not None:  # i.e. not already compressed.
+            self._compressed_graph = CompressedMultiDiGraph(self._graph)
+            del self._graph
+        return self
+
+    def uncompress(self) -> 'QuantumCircuit':
+        if self._compressed_graph is not None:  # i.e. already compressed.
+            self._graph = self._compressed_graph.uncompress()
+            del self._compressed_graph
+        return self
+
+    @property
+    def compressed(self) -> bool:
+        return self._graph is None
+
+    def inverse(self) -> 'QuantumCircuit':
+        inv = QuantumCircuit(self._qubit_number,
+                             cache_matrix=self._cache_matrix)
+        for op in reversed(list(self.operations)):
+            inv.add_operation(op.inverse())
+
+        return inv
+
+
+class CompressedMultiDiGraph:
+
+    def __init__(self, graph: nx.MultiDiGraph) -> None:
+        node_number = len(graph.nodes)
+        edge_number = len(graph.edges)
+
+        if node_number < 2 ** 8:
+            data_type = numpy.uint8
+        elif node_number < 2 ** 16:
+            data_type = numpy.uint16
+        else:
+            data_type = numpy.uint32
+
+        # We keep each edge with its corresponding qubit ID.
+        self._from_arr = numpy.zeros((edge_number,), dtype=data_type)
+        self._to_arr = numpy.zeros((edge_number,), dtype=data_type)
+        self._data_arr = numpy.zeros((edge_number,), dtype=data_type)
+        for idx, (u, v, qubit_id) in enumerate(graph.edges):
+            self._from_arr[idx] = u
+            self._to_arr[idx] = v
+            self._data_arr[idx] = qubit_id
+
+        # And the we keep each node
+        self._qubit_number = 0
+        self._is_op_node = numpy.zeros((node_number,), dtype=numpy.bool)
+        self._operations = list()
+        for node_id, node_data in graph.nodes.items():
+            if node_data['type'] == 'op':
+                self._is_op_node[node_id] = True
+                self._operations.append(node_data['op'])
+            else:
+                self._qubit_number += 1
+
+    def uncompress(self) -> nx.MultiDiGraph:
+        graph = nx.MultiDiGraph()
+
+        # Re-create the nodes.
+        for i in range(self._qubit_number):
+            graph.add_node(i, type="input", key=i)
+
+        for node_id in range(self._qubit_number, len(self._is_op_node)):
+            graph.add_node(node_id, type="op",
+                           op=self._operations[node_id - self._qubit_number])
+
+        # Re-create the edges
+        for u, v, qubit_id in zip(self._from_arr, self._to_arr, self._data_arr):
+            graph.add_edge(u, v, key=qubit_id)
+
+        return graph
