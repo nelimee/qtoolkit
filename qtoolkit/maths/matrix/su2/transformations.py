@@ -61,12 +61,7 @@ def su2_to_so3(unitary: qtypes.SU2Matrix) -> qtypes.SO3Vector:
     sin_theta_2 = numpy.linalg.norm(coefficients, 2)
 
     if sin_theta_2 == 0.0:
-        # In the original implementation by Dawson
-        # https://github.com/cmdawson/sk/blob/master/src/su2.cpp#L152
-        # he computes theta = 2 * arccos(cos_theta_2). This seems to be
-        # useless as we know that theta = 2*k*pi.
-        # So we don't need to compute theta and we fix it to 2*pi.
-        coefficients = numpy.array([2 * numpy.pi, 0.0, 0.0])
+        coefficients = numpy.array([2 * numpy.arccos(cos_theta_2), 0.0, 0.0])
     else:
         # We return the vector of coefficients, not normalised.
         theta = 2 * numpy.arctan2(sin_theta_2, cos_theta_2)
