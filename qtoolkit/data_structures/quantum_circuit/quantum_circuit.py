@@ -302,7 +302,11 @@ class QuantumCircuit:
 
 class CompressedMultiDiGraph:
 
-    def __init__(self, graph: nx.MultiDiGraph) -> None:
+    def __init__(self, graph: nx.MultiDiGraph = None) -> None:
+        if graph is None:
+            self._qubit_number = 0
+            return
+
         node_number = len(graph.nodes)
         edge_number = len(graph.edges)
 
@@ -333,8 +337,20 @@ class CompressedMultiDiGraph:
             else:
                 self._qubit_number += 1
 
+    def __copy__(self) -> 'CompressedMultiDiGraph':
+        cpy = CompressedMultiDiGraph()
+        cpy._qubit_number = self._qubit_number
+        cpy._from_arr = self._from_arr.copy()
+        cpy._to_arr = self._to_arr.copy()
+        cpy._data_arr = self._data_arr.copy()
+        cpy._is_op_node = self._is_op_node.copy()
+        cpy._operations = copy.copy(self._operations)
+        return cpy
+
     def uncompress(self) -> nx.MultiDiGraph:
         graph = nx.MultiDiGraph()
+        if self._qubit_number == 0:
+            return graph
 
         # Re-create the nodes.
         for i in range(self._qubit_number):
