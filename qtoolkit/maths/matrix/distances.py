@@ -73,7 +73,8 @@ def fowler_distances(A: numpy.ndarray,
     dimension = B.shape[0]
     products = numpy.transpose(A, axes=(0, 2, 1)).conj() @ B
     traces = numpy.trace(products, axis1=1, axis2=2)
-    return numpy.sqrt(numpy.abs(dimension - traces) / dimension)
+    frac = dimension - numpy.abs(traces) / dimension
+    return numpy.sqrt(numpy.abs(frac))
 
 
 def trace_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
