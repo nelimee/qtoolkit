@@ -29,7 +29,12 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+import os.path
 
 # Test-related constants
 USE_RANDOM_TESTS = True
 RANDOM_SAMPLES = 100
+
+this_dir = os.path.dirname(os.path.realpath(__file__))
+qtoolkit_dir = os.path.dirname(os.path.dirname(this_dir))
+data_dir = os.path.join(qtoolkit_dir, "data")
