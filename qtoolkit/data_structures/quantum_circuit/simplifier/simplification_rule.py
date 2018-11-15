@@ -31,6 +31,8 @@
 
 """Implements the SimplificationRule class."""
 
+import numpy
+
 import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgate
 import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 
@@ -92,11 +94,13 @@ class InverseRule(SimplificationRule):
         op_names = [op.gate.name for op in opgen]
         if len(op_names) < 2:
             return False
-        forward = self._gate.name == op_names[0] and self._inverse.name == \
-                  op_names[1]
-        backward = self._inverse.name == op_names[0] and self._gate.name == \
-                   op_names[1]
-        return forward or backward
+
+        result = (self._gate.name == op_names[0] and self._inverse.name ==
+                  op_names[1])
+        result = result or (
+            self._inverse.name == op_names[0] and self._gate.name == op_names[
+            1])
+        return result
 
     def is_simplifiable(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
         """Check if the given quantum circuit is simplifiable.
@@ -145,8 +149,86 @@ class CXInverseRule(SimplificationRule):
         op1, op2 = operations[0], operations[1]
 
         result = True
-        result &= (op1.gate.name == 'X' and op2.gate.name == 'X')
-        result &= (op1.target == op2.target)
-        result &= (len(op1.controls) == 1 and len(op2.controls) == 1 and
-                   op1.controls[0] == op2.controls[0])
+        result = result and (op1.gate.name == 'X' and op2.gate.name == 'X')
+        result = result and (op1.target == op2.target)
+        result = result and (
+            len(op1.controls) == 1 and len(op2.controls) == 1 and op1.controls[
+            0] == op2.controls[0])
         return result
+
+
+class RepeatedRule(SimplificationRule):
+
+    def __init__(self, quantum_gate: qgate.QuantumGate,
+                 repetition: int) -> None:
+        self._gate = quantum_gate
+        self._repetition = repetition
+
+    def is_simplifiable_from_last(self,
+                                  quantum_circuit: qcirc.QuantumCircuit) -> \
+        bool:
+        """Check if the last part of the given quantum circuit is simplifiable.
+
+        This method can be used to check if the last gate of the quantum circuit
+        introduced a possible simplification or not.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        last = quantum_circuit.last
+        if last is None:
+            return False
+        opgen = quantum_circuit.get_n_last_operations_on_qubit(self._repetition,
+                                                               last.target)
+        op_names = [op.gate.name for op in opgen]
+        if len(op_names) < self._repetition:
+            return False
+
+        return all((name == self._gate.name for name in op_names))
+
+    def is_simplifiable(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
+        """Check if the given quantum circuit is simplifiable.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        raise NotImplementedError("This method should be overridden.")
+
+
+class NearIdentityRule(SimplificationRule):
+
+    def __init__(self, atol: float = 1e-8, rtol: float = 1e-5):
+        self._atol = atol
+        self._rtol = rtol
+
+    def is_simplifiable_from_last(self,
+                                  quantum_circuit: qcirc.QuantumCircuit) -> \
+        bool:
+        """Check if the last part of the given quantum circuit is simplifiable.
+
+        This method can be used to check if the last gate of the quantum circuit
+        introduced a possible simplification or not.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        matrix = quantum_circuit.matrix
+        dim = matrix.shape[0]
+        return numpy.allclose(matrix, numpy.identity(dim), rtol=self._rtol,
+                              atol=self._atol)
+
+    def is_simplifiable(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
+        """Check if the given quantum circuit is simplifiable.
+
+        :param quantum_circuit: the quantum circuit to check for
+        simplifiability.
+        :return: True if the quantum circuit is simplifiable according to the
+        rule stored, else False.
+        """
+        raise NotImplementedError("This method should be overridden.")
