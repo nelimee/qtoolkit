@@ -42,8 +42,10 @@ import \
 def generate_all_quantum_circuits(basis: typing.Sequence[qop.QuantumOperation],
                                   depth: int, qubit_number: int,
                                   simplifier: qsimpl.GateSequenceSimplifier,
-                                  include_nodes: bool = False) -> \
-    typing.Iterable[qcirc.QuantumCircuit]:
+                                  include_nodes: bool = False,
+                                  return_progress: bool = False) -> \
+    typing.Iterable[typing.Union[
+        qcirc.QuantumCircuit, typing.Tuple[qcirc.QuantumCircuit, int]]]:
     """Generate all the non-simplifiable quantum circuits.
 
     This function yields each non-simplifiable (according to the given
@@ -56,12 +58,18 @@ def generate_all_quantum_circuits(basis: typing.Sequence[qop.QuantumOperation],
     :param depth: Maximum length of the generated sequences. If include_nodes is
     False, all the generated sequences will have a length equal to depth. Else,
     the sequences will have a length lower or equal to depth.
+    :param qubit_number: the number of qubits on which the circuits will be
+    generated.
     :param simplifier: The simplifier used to know if a given quantum circuit is
     simplifiable or not.
     :param include_nodes: If False, only sequences of the specified depth are
     generated. Else, all sequences of length between 1 and depth (inclusive) are
     generated.
-    :return: An iterable yielding QuantumCircuit instance.
+    :param return_progress: If False, the function returns only the generated
+    quantum circuits. If True, the function returns tuples containing the
+    generated quantum circuit along with its ID.
+    :return: An iterable yielding QuantumCircuit or (QuantumCircuit, int)
+    instances.
     """
     # 1. Check inputs
     assert depth > 0, "Depth should be 1 or more."
@@ -70,48 +78,107 @@ def generate_all_quantum_circuits(basis: typing.Sequence[qop.QuantumOperation],
 
     quantum_circuit = qcirc.QuantumCircuit(qubit_number)
 
-    return _generate_all_quantum_circuits_impl(basis, depth, quantum_circuit,
-                                               simplifier, include_nodes)
+    # From https://stackoverflow.com/questions/952914/making-a-flat-list-out
+    # -of-list-of-lists-in-python#45323085
+    variations = list(itertools.chain.from_iterable(
+        (_generate_all_variations(op, qubit_number) for op in basis)))
+
+    if return_progress:
+        return _gen_all_qcircs_progress_impl(depth, quantum_circuit, simplifier,
+                                             variations, include_nodes)
+    else:
+        return _gen_all_qcircs_impl(depth, quantum_circuit, simplifier,
+                                    variations, include_nodes)
 
 
-def _generate_all_quantum_circuits_impl(
-    basis: typing.Sequence[qop.QuantumOperation], depth: int,
-    quantum_circuit: qcirc.QuantumCircuit,
-    simplifier: qsimpl.GateSequenceSimplifier, include_nodes: bool = False):
+def _gen_all_qcircs_progress_impl(depth: int, qc: qcirc.QuantumCircuit,
+                                  simplifier: qsimpl.GateSequenceSimplifier,
+                                  variations: typing.List[qop.QuantumOperation],
+                                  include_nodes: bool = False,
+                                  progress: int = 0):
     """Generate all the non-simplifiable quantum circuits.
 
-    :param basis: A sequence of basis gates in SU(d) used to construct the
-    sequences.
-    :param depth: Maximum length of the generated sequences. If include_nodes is
-    False, all the generated sequences will have a length equal to depth. Else,
-    the sequences will have a length lower or equal to depth.
-    :param simplifier: The simplifier used to know if a given quantum circuit is
-    simplifiable or not.
-    :param include_nodes: If False, only sequences of the specified depth are
-    generated. Else, all sequences of length between 1 and depth (inclusive) are
-    generated.
+    :param depth: Maximum length of the generated sequences. If
+    include_nodes is False, all the generated sequences will have a length
+    equal to depth. Else, the sequences will have a length lower or equal to
+    depth.
+    :param qc: The quantum circuit representing the current state of the
+    generation.
+    :param simplifier: The simplifier used to know if a given quantum
+    circuit is simplifiable or not.
+    :param variations: All the possible operations that can be applied on one
+    level of the quantum circuit (one level <=> depth=constant).
+    :param include_nodes: If False, only sequences of the specified depth
+    are generated. Else, all sequences of length between 1 and depth
+    (inclusive) are generated.
     :return: An iterable yielding QuantumCircuit instance.
     """
+
+    if include_nodes:
+        yield qc, progress
+
     if depth == 1:
-        for op in basis:
-            for variant in _generate_all_variations(op, quantum_circuit.size):
-                quantum_circuit.add_operation(variant)
-                if not simplifier.is_simplifiable_from_last(quantum_circuit):
-                    yield quantum_circuit
-                quantum_circuit.pop()
+        for variant in variations:
+            qc.add_operation(variant)
+            progress += 1
+            if not simplifier.is_simplifiable_from_last(qc):
+                yield qc, progress
+            qc.pop()
         return
 
-    for op in basis:
-        for variant in _generate_all_variations(op, quantum_circuit.size):
-            quantum_circuit.add_operation(variant)
-            if not simplifier.is_simplifiable_from_last(quantum_circuit):
-                for circ in _generate_all_quantum_circuits_impl(basis,
-                                                                depth - 1,
-                                                                quantum_circuit,
-                                                                simplifier,
-                                                                include_nodes):
-                    yield circ
-            quantum_circuit.pop()
+    for variant in variations:
+        qc.add_operation(variant)
+        progress += 1
+        if not simplifier.is_simplifiable_from_last(qc):
+            yield from _gen_all_qcircs_progress_impl(depth - 1, qc, simplifier,
+                                                     variations, include_nodes,
+                                                     progress)
+        else:
+            # We pruned some circuit, we need to update the progress
+            # accordingly.
+            progress += len(variations) ** (depth - 1)
+        qc.pop()
+
+
+def _gen_all_qcircs_impl(depth: int, qc: qcirc.QuantumCircuit,
+                         simplifier: qsimpl.GateSequenceSimplifier,
+                         variations: typing.List[qop.QuantumOperation],
+                         include_nodes: bool = False):
+    """Generate all the non-simplifiable quantum circuits.
+
+    :param depth: Maximum length of the generated sequences. If
+    include_nodes is False, all the generated sequences will have a length
+    equal to depth. Else, the sequences will have a length lower or equal to
+    depth.
+    :param qc: The quantum circuit representing the current state of the
+    generation.
+    :param simplifier: The simplifier used to know if a given quantum
+    circuit is simplifiable or not.
+    :param variations: All the possible operations that can be applied on one
+    level of the quantum circuit (one level <=> depth=constant).
+    :param include_nodes: If False, only sequences of the specified depth
+    are generated. Else, all sequences of length between 1 and depth
+    (inclusive) are generated.
+    :return: An iterable yielding QuantumCircuit instance.
+    """
+
+    if include_nodes:
+        yield qc
+
+    if depth == 1:
+        for variant in variations:
+            qc.add_operation(variant)
+            if not simplifier.is_simplifiable_from_last(qc):
+                yield qc
+            qc.pop()
+        return
+
+    for variant in variations:
+        qc.add_operation(variant)
+        if not simplifier.is_simplifiable_from_last(qc):
+            yield from _gen_all_qcircs_impl(depth - 1, qc, simplifier,
+                                            variations, include_nodes)
+        qc.pop()
 
 
 def _generate_all_variations(op: qop.QuantumOperation, qubit_number: int):
