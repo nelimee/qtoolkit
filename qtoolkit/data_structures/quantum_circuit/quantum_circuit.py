@@ -145,6 +145,10 @@ class QuantumCircuit:
         self._graph.add_edge(from_id, to_id, key=qubit_id)
 
     def get_n_last_operations_on_qubit(self, n: int, qubit_id: int):
+        return list(self.get_n_last_operations_on_qubit_reversed(n, qubit_id))[
+               ::-1]
+
+    def get_n_last_operations_on_qubit_reversed(self, n: int, qubit_id: int):
         """Returns an iterable on the n last operations performed on the qubit.
 
         If there is not enough operations, returns all the operations.
@@ -162,6 +166,19 @@ class QuantumCircuit:
                 lambda node_id: qubit_id in self._graph.get_edge_data(node_id,
                                                                       current),
                 self._graph.predecessors(current)))
+
+    def get_operations_on_qubit_reversed(self, qubit_id: int):
+        # Ask for node_counter operations. The get_n_last_operations_... will
+        # return node_counter operations if possible or all the operations on
+        # the given qubit.
+        return self.get_n_last_operations_on_qubit_reversed(self._node_counter,
+                                                            qubit_id)
+
+    def get_operations_on_qubit(self, qubit_id: int):
+        # Ask for node_counter operations. The get_n_last_operations_... will
+        # return node_counter operations if possible or all the operations on
+        # the given qubit.
+        return self.get_n_last_operations_on_qubit(self._node_counter, qubit_id)
 
     @property
     def last(self):
