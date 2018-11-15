@@ -41,13 +41,6 @@ import qtoolkit.maths.matrix.su2.group_commutator as gc_su2
 import qtoolkit.utils.types as qtypes
 
 
-def fourier_matrix(dim: int) -> qtypes.UnitaryMatrix:
-    i, j = numpy.meshgrid(numpy.arange(dim), numpy.arange(dim))
-    omega = numpy.exp(- 2 * numpy.pi * 1.j / dim)
-    W = numpy.power(omega, i * j) / numpy.sqrt(dim)
-    return W
-
-
 def group_commutator(U: qtypes.SUdMatrix) -> typing.Tuple[
     qtypes.SUdMatrix, qtypes.SUdMatrix]:
     dim = U.shape[0]
@@ -71,6 +64,12 @@ def group_commutator(U: qtypes.SUdMatrix) -> typing.Tuple[
 
 def group_commutator_2(U: qtypes.SUdMatrix) -> typing.Tuple[
     qtypes.SUdMatrix, qtypes.SUdMatrix]:
+    def fourier_matrix(dim: int) -> qtypes.UnitaryMatrix:
+        i, j = numpy.meshgrid(numpy.arange(dim), numpy.arange(dim))
+        omega = numpy.exp(- 2 * numpy.pi * 1.j / dim)
+        W = numpy.power(omega, i * j) / numpy.sqrt(dim)
+        return W
+
     dim = U.shape[0]
 
     epsilon = qdists.operator_norm(numpy.identity(dim) - U)
