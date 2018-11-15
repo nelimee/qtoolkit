@@ -301,6 +301,9 @@ class QuantumCircuit:
 
         return inv
 
+    def __str__(self) -> str:
+        return ' '.join((op.gate.name for op in self.operations))
+
 
 class CompressedMultiDiGraph:
 
