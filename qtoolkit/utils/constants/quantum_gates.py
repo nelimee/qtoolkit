@@ -38,8 +38,9 @@ def _self_inverse(gate: qgates.QuantumGate) -> qgates.QuantumGate:
 
 
 def _generic_inverse(gate: qgates.QuantumGate) -> qgates.QuantumGate:
-    return qgates.QuantumGate(gate.name + '+', gate.matrix.T.conj(),
-                              lambda self: gate, parameters=gate.parameters)
+    name = (gate.name + '+').replace('++', '')
+    return qgates.QuantumGate(name, gate.matrix.T.conj(), _generic_inverse,
+                              parameters=gate.parameters)
 
 
 X = qgates.QuantumGate('X', mconsts.X, _self_inverse)
