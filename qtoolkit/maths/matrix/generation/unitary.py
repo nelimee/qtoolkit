@@ -33,18 +33,18 @@
 
 import numpy
 
+import qtoolkit.maths.matrix.generation.sud as gen_sud
 import qtoolkit.maths.random as rand
 import qtoolkit.utils.types as qtypes
 
 
-def generate_random_unitary_matrix() -> qtypes.UnitaryMatrix:
+def generate_random_unitary_matrix(dimension: int = 2) -> qtypes.UnitaryMatrix:
     """Generate a random unitary matrix.
 
     :return: A unitary matrix.
     """
-    alpha, beta = rand.generate_random_normalised_complexes(2)
-    e_iphi = rand.generate_random_complex(1)
-    return generate_unitary_matrix(alpha, beta, e_iphi)
+    determinant = rand.generate_random_complex(amplitude=1)
+    return determinant * gen_sud.generate_random_SUd(dimension)
 
 
 def generate_unitary_matrix(alpha: complex, beta: complex,
@@ -63,3 +63,14 @@ def generate_unitary_matrix(alpha: complex, beta: complex,
     """
     return numpy.array([[alpha, beta], [-e_iphi * numpy.conj(beta),
                                         e_iphi * numpy.conj(alpha)]])
+
+
+def coefficients_to_unitary(coefficients: numpy.ndarray,
+                            determinant: complex) -> qtypes.UnitaryMatrix:
+    """Generate the unitary matrix associated with the given coefficients.
+
+    :param coefficients: a vector of 2*(d**2) real numbers in [0, 1).
+    :param determinant: determinant of the generated matrix.
+    :return: a unitary matrix with the provided determinant.
+    """
+    return determinant * gen_sud.coefficient_to_SUd(coefficients)
