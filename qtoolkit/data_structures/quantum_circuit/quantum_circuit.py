@@ -64,7 +64,6 @@ class QuantumCircuit:
         self._matrix = None
         if self._cache_matrix:
             self._matrix = numpy.identity(2 ** self._qubit_number)
-        self._compressed_graph = None
 
     def add_operation(self, operation: qop.QuantumOperation) -> None:
         """Add an operation to the circuit.
@@ -268,7 +267,10 @@ class QuantumCircuit:
     def __copy__(self) -> 'QuantumCircuit':
         cpy = QuantumCircuit(self._qubit_number,
                              cache_matrix=self._cache_matrix)
-        cpy._graph = self._graph.copy()
+        if self.compressed:
+            cpy._compressed_graph = copy.copy(self._compressed_graph)
+        else:
+            cpy._graph = self._graph.copy()
         cpy._node_counter = self._node_counter
         cpy._last_inserted_operations = self._last_inserted_operations.copy()
         if self._cache_matrix:
@@ -276,20 +278,20 @@ class QuantumCircuit:
         return cpy
 
     def compress(self) -> 'QuantumCircuit':
-        if self._graph is not None:  # i.e. not already compressed.
+        if not self.compressed:
             self._compressed_graph = CompressedMultiDiGraph(self._graph)
             del self._graph
         return self
 
     def uncompress(self) -> 'QuantumCircuit':
-        if self._compressed_graph is not None:  # i.e. already compressed.
+        if self.compressed:
             self._graph = self._compressed_graph.uncompress()
             del self._compressed_graph
         return self
 
     @property
     def compressed(self) -> bool:
-        return self._graph is None
+        return hasattr(self, '_compressed_graph')
 
     def inverse(self) -> 'QuantumCircuit':
         inv = QuantumCircuit(self._qubit_number,
