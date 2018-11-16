@@ -30,25 +30,27 @@
 # ======================================================================
 
 import qtoolkit.data_structures.nearest_neighbour_structure as nn_struct
-import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.data_structures.nearest_neighbour_structure as qnn
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.maths.matrix.su2.group_commutator as su2_gc
 import qtoolkit.maths.matrix.sud.group_commutator as sud_gc
 import qtoolkit.utils.types as qtypes
 
 
-def solovay_kitaev(U: qtypes.SUdMatrix, recursion_level: int,
-                   approximations: qtypes.NearestNeighbourQueryable) -> \
-    qgate_seq.QuantumGateSequence:
-    """Implementation of the Solovay-Kitaev theorem for SU(d) matrices.
+def solovay_kitaev(U: qtypes.UnitaryMatrix, recursion_level: int,
+                   approximations: qnn.NearestNeighbourStructure) -> \
+    qcirc.QuantumCircuit:
+    """Implementation of the Solovay-Kitaev theorem for unitary matrices.
 
     The implementation follows https://github.com/cmdawson/sk.
 
-    :param U: The SU(d) matrix to decompose.
+    :param U: The unitary matrix to decompose.
     :param recursion_level: The number of recursive calls.
     :param approximations: An efficient structure to perform nearest-neighbour
-    queries on SU(d) matrices. The structure needs to return an instance of the
-    QuantumGateSequence class.
-    :return: a sequence of quantum gates approximating the given SU(d) matrix U.
+    queries on unitary matrices. The structure needs to return an instance of
+    the QuantumGateSequence class.
+    :return: a sequence of quantum gates approximating the given unitary matrix
+    U.
     """
     if recursion_level == 0:
         _, approximation = approximations.query(U)
@@ -61,8 +63,7 @@ def solovay_kitaev(U: qtypes.SUdMatrix, recursion_level: int,
 
 
 def solovay_kitaev_su2(U: qtypes.SU2Matrix, recursion_level: int,
-                       approximations: nn_struct.NearestNeighbourStructure) \
-    -> qgate_seq.QuantumGateSequence:
+                       approximations: nn_struct.NearestNeighbourStructure) -> qcirc.QuantumCircuit:
     """Implementation of the Solovay-Kitaev theorem for SU(2) matrices.
 
     The implementation follows https://github.com/cmdawson/sk.
