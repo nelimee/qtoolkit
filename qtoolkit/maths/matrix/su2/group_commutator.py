@@ -40,8 +40,7 @@ import qtoolkit.maths.matrix.su2.transformations as su2trans
 import qtoolkit.utils.types as qtypes
 
 
-def su2_group_commutator_decompose(matrix: qtypes.UnitaryMatrix) -> \
-typing.Tuple[
+def group_commutator(matrix: qtypes.UnitaryMatrix) -> typing.Tuple[
     qtypes.SU2Matrix, qtypes.SU2Matrix]:
     """Finds V,W such that U = V @ W @ V.T.conj() @ W.T.conj().
 
@@ -50,8 +49,8 @@ typing.Tuple[
     """
     # unitary is a rotation of a unknown angle $\theta$ about some unknown
     # axis. Here, we find the angle $\theta$.
-    cart3_unitary = su2trans.su2_to_so3(matrix)
-    theta = numpy.linalg.norm(cart3_unitary, 2)
+    so3_unitary = su2trans.su2_to_so3(matrix)
+    theta = numpy.linalg.norm(so3_unitary, 2)
 
     # Then, we construct the matrix that consist of a rotation of $\theta$
     # about the X-axis.

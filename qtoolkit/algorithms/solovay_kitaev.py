@@ -63,7 +63,8 @@ def solovay_kitaev(U: qtypes.UnitaryMatrix, recursion_level: int,
 
 
 def solovay_kitaev_su2(U: qtypes.SU2Matrix, recursion_level: int,
-                       approximations: nn_struct.NearestNeighbourStructure) -> qcirc.QuantumCircuit:
+                       approximations: nn_struct.NearestNeighbourStructure) \
+    -> qcirc.QuantumCircuit:
     """Implementation of the Solovay-Kitaev theorem for SU(2) matrices.
 
     The implementation follows https://github.com/cmdawson/sk.
@@ -78,7 +79,7 @@ def solovay_kitaev_su2(U: qtypes.SU2Matrix, recursion_level: int,
         _, approx_qgate_seq = approximations.query(U)
         return approx_qgate_seq
     Un_1 = solovay_kitaev_su2(U, recursion_level - 1, approximations)
-    V, W = su2_gc.su2_group_commutator_decompose(U @ Un_1.matrix.T.conj())
+    V, W = su2_gc.group_commutator(U @ Un_1.matrix.T.conj())
     Vn_1 = solovay_kitaev_su2(V, recursion_level - 1, approximations)
     Wn_1 = solovay_kitaev_su2(W, recursion_level - 1, approximations)
     return Vn_1 @ Wn_1 @ Vn_1.inverse() @ Wn_1.inverse() @ Un_1
