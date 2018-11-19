@@ -33,17 +33,23 @@
 
 import copy
 import typing
+from typing import Optional
 
 import numpy
 
+import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as gh
 import qtoolkit.utils.constants.matrices as mconsts
-from qtoolkit.data_structures.quantum_circuit.gate_hierarchy import QuantumGate
 
 
 class QuantumOperation:
     """A class representing a quantum operation."""
-    def __init__(self, gate: QuantumGate, target: int,
-                 controls: typing.Sequence[int] = None) -> None:
+
+    def __init__(self,
+                 gate: typing.Union[gh.QuantumGate, gh.ParametrisedQuantumGate],
+                 target: Optional[int] = None,
+                 controls: Optional[typing.Sequence[Optional[int]]] = None,
+                 parameters: Optional[
+                     typing.Sequence[Optional[float]]] = None) -> None:
         """Initialise the QuantumOperation instance.
 
         For the moment, the QuantumOperation class only support 1-qubit gates
@@ -51,32 +57,72 @@ class QuantumOperation:
         limitation as most of the quantum hardware only supports 1-qubit gates
         and one controlled operation like CX.
 
+        If any of the value of controls or the value of target are None, this
+        means that the operation is "abstract", i.e. it represent the general
+        operation, not applied to a particular case.
+        For example, QuantumOperation(X, None, [None, None]) represents the
+        doubly-controlled X operation.
+
         :param gate: the 1-qubit quantum gate of the operation.
         :param target: the target qubit of the given quantum gate.
-        :param controls: an arbitrary number of control qubits.
+        :param controls: an arbitrary number of control qubits. If the controls
+        parameter is None, this means that the gate is not controlled by any
+        qubit.
+        :param parameters: parameters of the given gate. A value of None can
+        means 2 things: if the provided gate is a ParametrisedQuantumGate, it
+        means that the operation represents the "abstract" operation, else, it
+        is just a reminder that the stored gate is not parametrised.
         """
         if controls is None:
             controls = list()
-        assert target not in controls, "The target qubit cannot be used as a " \
-                                       "control qubit."
+        assert target is None or target not in controls, (
+            "The target qubit cannot be used as a control qubit.")
         self._gate = gate
         self._target = target
         self._controls = controls
+        self._parameters = parameters
+
+    def __copy__(self) -> 'QuantumOperation':
+        return QuantumOperation(self._gate, self._target,
+                                copy.copy(self._controls),
+                                copy.copy(self._parameters))
 
     @property
     def gate(self):
         """Getter for the 1-qubit quantum gate stored in this operation."""
+        if self.is_parametrised():
+            return self._gate(self._parameters)
         return self._gate
 
     @property
-    def controls(self):
+    def target(self) -> int:
+        """Getter for the target qubit."""
+        return self._target
+
+    @property
+    def controls(self) -> Optional[typing.Sequence[Optional[int]]]:
         """Getter for the control qubits."""
         return self._controls
 
+    @target.setter
+    def target(self, value: int) -> None:
+        assert value not in self._controls
+        self._target = value
+
+    @controls.setter
+    def controls(self, value: typing.Iterable[int]) -> None:
+        assert self.target not in value
+        self._controls = list(value)
+
     @property
-    def target(self):
-        """Getter for the target qubit."""
-        return self._target
+    def parameters(self) -> Optional[numpy.ndarray]:
+        if self._parameters is not None:
+            return numpy.array(self._parameters)
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, value: numpy.ndarray) -> None:
+        self._parameters = value
 
     def matrix(self, qubit_number: int) -> numpy.ndarray:
         """Computes the matrix representation of the operation.
@@ -92,7 +138,11 @@ class QuantumOperation:
             for qubit_index in range(qubit_number):
                 # If we are on the target qubit then apply the gate.
                 if qubit_index == self._target:
-                    ret = numpy.kron(ret, self._gate.matrix)
+                    if self.is_parametrised():
+                        ret = numpy.kron(ret,
+                                         self._gate(self.parameters).matrix)
+                    else:
+                        ret = numpy.kron(ret, self._gate.matrix)
                 # Else, we should multiply by the gate that is controlled.
                 else:
                     ret = numpy.kron(ret, mconsts.ID2)
@@ -113,8 +163,12 @@ class QuantumOperation:
                     # If all the control qubits are 1, then multiply by the
                     # gate.
                     if all(ctrl_values_list):
-                        current_matrix = numpy.kron(current_matrix,
-                                                    self._gate.matrix)
+                        if self.is_parametrised():
+                            m = self._gate(self.parameters).matrix
+                            current_matrix = numpy.kron(current_matrix, m)
+                        else:
+                            current_matrix = numpy.kron(current_matrix,
+                                                        self._gate.matrix)
                     # Else, we should multiply by the gate that is controlled.
                     else:
                         current_matrix = numpy.kron(current_matrix, mconsts.ID2)
@@ -133,6 +187,8 @@ class QuantumOperation:
         return ret
 
     def inverse_inplace(self) -> 'QuantumOperation':
+        # TODO: H property may not be defined if self._gate is a
+        # ParametrisedQuantumGate
         self._gate = self._gate.H
         return self
 
@@ -143,6 +199,13 @@ class QuantumOperation:
     @property
     def H(self):
         return self.inverse()
+
+    def is_parametrised(self):
+        return callable(self._gate)
+
+    def __call__(self, *args, **kwargs) -> 'QuantumOperation':
+        return QuantumOperation(self._gate(*args, **kwargs), self.target,
+                                self.controls)
 
 
 def control(operation: QuantumOperation, *controls: int) -> QuantumOperation:
