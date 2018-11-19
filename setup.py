@@ -49,6 +49,11 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+# Get the requirements
+with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
+    requirements = f.read().split('\n')
+
+
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 
@@ -169,8 +174,7 @@ setup(  # This is the name of your project. The first time you publish this
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['numpy', 'scipy', 'sympy', 'qiskit>=0.6', 'sklearn',
-                      'matplotlib'],  # Optional
+    install_requires=requirements,  # Optional
 
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
