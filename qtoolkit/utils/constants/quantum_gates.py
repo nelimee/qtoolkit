@@ -43,6 +43,11 @@ def _generic_inverse(gate: qgates.QuantumGate) -> qgates.QuantumGate:
                               parameters=gate.parameters)
 
 
+def _inverse_angle(gate: qgates.QuantumGate) -> qgates.QuantumGate:
+    return qgates.QuantumGate(gate.name, gate.matrix.T.conj(), _inverse_angle,
+                              parameters=-gate.parameters)
+
+
 X = qgates.QuantumGate('X', mconsts.X, _self_inverse)
 Y = qgates.QuantumGate('Y', mconsts.Y, _self_inverse)
 Z = qgates.QuantumGate('Z', mconsts.Z, _self_inverse)
@@ -50,6 +55,8 @@ H = qgates.QuantumGate('H', mconsts.H, _self_inverse)
 S = qgates.QuantumGate('S', mconsts.S, _generic_inverse)
 T = qgates.QuantumGate('T', mconsts.T, _generic_inverse)
 ID = qgates.QuantumGate('Id', mconsts.ID2, _self_inverse)
-CX = qgates.QuantumGate('CX', mconsts.CX, _self_inverse)  #
-# CX_ctrl = qgates.QuantumGate("CX_ctrl", mconsts.ID2)
-# CX_trgt = qgates.QuantumGate("CX_trgt", mconsts.ID2)
+CX = qgates.QuantumGate('CX', mconsts.CX, _self_inverse)
+
+Rx = qgates.ParametrisedQuantumGate('Rx', mconsts.Rx, _inverse_angle)
+Ry = qgates.ParametrisedQuantumGate('Ry', mconsts.Ry, _inverse_angle)
+Rz = qgates.ParametrisedQuantumGate('Rz', mconsts.Rz, _inverse_angle)
