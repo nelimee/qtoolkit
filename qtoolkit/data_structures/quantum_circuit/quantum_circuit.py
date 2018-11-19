@@ -388,3 +388,6 @@ class CompressedMultiDiGraph:
             graph.add_edge(u, v, key=qubit_id)
 
         return graph
+
+
+CircuitCostFunction = typing.Callable[[QuantumCircuit], float]

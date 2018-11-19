@@ -72,3 +72,5 @@ UnsignedIntegerType = typing.Union[
 
 # Other types
 NearestNeighbourQueryable = typing.Any
+
+Bounds = typing.Optional[typing.Sequence[typing.Optional[numpy.ndarray]]]
