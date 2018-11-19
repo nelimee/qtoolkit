@@ -31,13 +31,11 @@
 
 """Implements several distances."""
 
-import typing
-
 import numpy
 import scipy
 
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.utils.types as qtypes
-from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 
 def fowler_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
@@ -104,12 +102,12 @@ def operator_norm(U: qtypes.UnitaryMatrix) -> float:
     return numpy.max(numpy.abs(eigenvalues))
 
 
-def gloa_objective_function(gate_sequence: QuantumGateSequence,
+def gloa_objective_function(gate_sequence: qcirc.QuantumCircuit,
                             objective_unitary: qtypes.UnitaryMatrix,
                             correctness_weight: float,
                             circuit_cost_weight: float,
-                            circuit_cost_func: typing.Callable[
-                                [QuantumGateSequence], float]) -> float:
+                            circuit_cost_func: qcirc.CircuitCostFunction) -> \
+    float:
     """Compute a modified GLOA objective function.
 
     The GLOA article is: https://arxiv.org/abs/1004.2242.

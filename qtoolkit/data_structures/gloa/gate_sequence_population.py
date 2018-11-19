@@ -31,14 +31,15 @@
 
 """Implement the GateSequencePopulation class, used to implement GLOA."""
 
+import copy
 import typing
 
 import numpy
 
+import qtoolkit.data_structures.gloa.gate_sequence_group as gsg
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.maths.matrix.distances as qdists
 import qtoolkit.utils.types as qtypes
-from qtoolkit.data_structures.gloa.gate_sequence_group import GateSequenceGroup
-from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 
 class GateSequencePopulation:
@@ -46,10 +47,10 @@ class GateSequencePopulation:
 
     def __init__(self, basis: typing.Sequence[qtypes.SUdMatrixGenerator],
                  objective_unitary: qtypes.UnitaryMatrix, length: int, n: int,
-                 p: int, r: numpy.ndarray, correctness_weight: float,
-                 circuit_cost_weight: float, circuit_cost_func: typing.Callable[
-            [QuantumGateSequence], float], parameters_bounds: typing.Optional[
-            numpy.ndarray] = None) -> None:
+                 population: int, r: numpy.ndarray, correctness_weight: float,
+                 circuit_cost_weight: float,
+                 circuit_cost_func: qcirc.CircuitCostFunction,
+                 parameters_bounds: qtypes.Bounds = None) -> None:
         """Initialise the GateSequencePopulation instance.
 
         :param basis: gates available to construct the approximation. Each gate
@@ -60,7 +61,8 @@ class GateSequencePopulation:
         :param length: length of the sequences that will be generated in each
         group.
         :param n: number of groups.
-        :param p: population of each group, i.e. number of gate sequences
+        :param population: population of each group, i.e. number of gate
+        sequences
         contained in each group.
         :param r: rates determining the portion of old (r[0]), leader (r[1]) and
         random (r[2]) that are used to generate new candidates.
@@ -78,11 +80,11 @@ class GateSequencePopulation:
         quantum gates can take any value.
         """
         self._groups = [
-            GateSequenceGroup(basis, objective_unitary, length, p, r,
-                              correctness_weight, circuit_cost_weight,
-                              circuit_cost_func, parameters_bounds) for _ in
+            gsg.GateSequenceGroup(basis, objective_unitary, length, population,
+                                  r, correctness_weight, circuit_cost_weight,
+                                  circuit_cost_func, parameters_bounds) for _ in
             range(n)]
-        self._p = p
+        self._population = population
         self._length = length
         self._correctness_weight = correctness_weight
         self._circuit_cost_weight = circuit_cost_weight
@@ -95,7 +97,7 @@ class GateSequencePopulation:
         See the GLOA paper for more precision on this step.
         """
         # One parameter per gate, length gates for each sequences, p sequences.
-        number_of_parameters = self._length * self._p
+        number_of_parameters = self._length * self._population
         for group in self._groups:
             # Number of cross-over we will perform on the current group.
             crossover_number = numpy.random.randint(
@@ -104,32 +106,49 @@ class GateSequencePopulation:
             for _ in range(crossover_number):
                 # Pick at random the indices.
                 other_group_index = numpy.random.randint(len(self._groups))
-                sequence_index = numpy.random.randint(self._p)
-                parameter_index = numpy.random.randint(self._length)
+                circuit_index = numpy.random.randint(self._population)
+                operation_index = numpy.random.randint(self._length)
                 # Create a new quantum gate sequence from the old one.
-                new_sequence = group.sequences[sequence_index]
-                new_sequence.params = new_sequence.params.copy()
-                # Perform crossover on this sequence.
-                new_sequence.params[parameter_index] = \
-                    self._groups[other_group_index].sequences[
-                        sequence_index].params[parameter_index]
-                # Check which sequence is the best.
-                old_cost = group.costs[sequence_index]
-                new_cost = qdists.gloa_objective_function(new_sequence,
+                new_circuit = copy.copy(group.circuits[circuit_index])
+                current_params = new_circuit[operation_index].parameters
+                if current_params is not None:
+                    new_params = self._get_parameters_from_group(group, len(
+                        current_params))
+                    new_circuit[operation_index].parameters = new_params
+                old_cost = group.costs[circuit_index]
+                new_cost = qdists.gloa_objective_function(new_circuit,
                                                           self._objective_unitary,
                                                           self._correctness_weight,
                                                           self._circuit_cost_weight,
                                                           self._circuit_cost_func)
                 if new_cost < old_cost:
-                    group.sequences[sequence_index] = new_sequence
-            group.update_costs()
+                    group.circuits[circuit_index] = new_circuit
+                    group.costs[circuit_index] = new_cost
+        return
+
+    @staticmethod
+    def _get_parameters_from_group(group: gsg.GateSequenceGroup,
+                                   parameter_number: int) -> typing.Sequence[
+        float]:
+        circuits_ids = list(range(len(group.circuits)))
+        parameters = []
+        while len(parameters) < parameter_number and circuits_ids:
+            poped_circ_id = numpy.random.randint(len(circuits_ids))
+            circ = group.circuits[circuits_ids.pop(poped_circ_id)]
+            operations_ids = list(range(len(circ.size)))
+            while len(parameters) < parameter_number and operations_ids:
+                poped_op_id = numpy.random.randint(len(operations_ids))
+                operation = circ[poped_op_id]
+                if operation.parameters:
+                    parameters = parameters + list(operation.parameters)
+        return parameters[:parameter_number]
 
     def perform_mutation_and_recombination(self) -> None:
         """Perform the mutation and recombination step on each group."""
         for group in self._groups:
             group.mutate_and_recombine()
 
-    def get_leader(self) -> typing.Tuple[float, QuantumGateSequence]:
+    def get_leader(self) -> typing.Tuple[float, qcirc.QuantumCircuit]:
         """Get the global leader.
 
         The global leader is the leader of the group formed by the leaders of

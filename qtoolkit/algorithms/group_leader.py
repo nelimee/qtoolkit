@@ -39,22 +39,21 @@ import typing
 
 import numpy
 
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
+import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 import qtoolkit.utils.types as qtypes
 from qtoolkit.data_structures.gloa.gate_sequence_population import \
     GateSequencePopulation
-from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 
 def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
-                 basis: typing.Sequence[qtypes.SUdMatrixGenerator], n: int = 15,
-                 p: int = 25,
-                 parameters_bound: typing.Optional[numpy.ndarray] = None,
+                 basis: typing.Sequence[qop.QuantumOperation], n: int = 15,
+                 p: int = 25, parameters_bound: qtypes.Bounds = None,
                  max_iter: int = 100, r: numpy.ndarray = None,
                  correctness_weight: float = 0.9,
                  circuit_cost_weight: float = 0.1,
-                 circuit_cost_func: typing.Callable[
-                     [QuantumGateSequence], float] = None) -> typing.Tuple[
-    float, QuantumGateSequence]:
+                 circuit_cost_func: qcirc.CircuitCostFunction = None) -> \
+    typing.Tuple[float, qcirc.QuantumCircuit]:
     """Implementation of the Group Leader Optimisation algorithm.
 
     The article presenting this algorithm can be found at
@@ -94,7 +93,7 @@ def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
         circuit_cost_weight = 0.0
         correctness_weight = 1.0
 
-        def circuit_cost_func(_: QuantumGateSequence) -> float:
+        def circuit_cost_func(_: qcirc.QuantumCircuit) -> float:
             return 1.0
 
     population = GateSequencePopulation(basis, unitary, length, n, p, r,

@@ -31,26 +31,27 @@
 
 """Implement the GateSequenceGroup class, used to implement GLOA."""
 
+import copy
 import typing
 
 import numpy
 
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
+import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 import qtoolkit.maths.matrix.distances as qdists
+import qtoolkit.maths.matrix.generation.quantum_circuit as qc_gen
 import qtoolkit.utils.types as qtypes
-from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
-from qtoolkit.maths.matrix.generation.gate_sequence import \
-    generate_random_gate_sequence
 
 
 class GateSequenceGroup:
     """A group of gate sequences."""
 
-    def __init__(self, basis: typing.Sequence[qtypes.SUdMatrixGenerator],
+    def __init__(self, basis: typing.Sequence[qop.QuantumOperation],
                  objective_unitary: qtypes.UnitaryMatrix, length: int, p: int,
                  r: numpy.ndarray, correctness_weight: float,
-                 circuit_cost_weight: float, circuit_cost_func: typing.Callable[
-            [QuantumGateSequence], float], parameters_bounds: typing.Optional[
-            numpy.ndarray] = None) -> None:
+                 circuit_cost_weight: float,
+                 circuit_cost_func: qcirc.CircuitCostFunction,
+                 parameters_bounds: qtypes.Bounds = None) -> None:
         """Initialise the GateSequenceGroup instance.
 
         A GateSequenceGroup is a group of p instances of QuantumGateSequence.
@@ -72,42 +73,44 @@ class GateSequenceGroup:
         :param circuit_cost_func: a function that takes as input an instance of
         QuantumGateSequence and returns a float representing the cost of the
         given circuit.
-        :param parameters_bounds: bounds for the parameter of the quantum gates
-        in the basis. If None, this means that no quantum gate in the basis is
-        parametrised. If not all the quantum gates in the basis are
-        parametrised, the parameter bounds corresponding to non-parametrised
-        quantum gates can take any value.
+        :param parameters_bounds: a list of bounds for each operation in the
+        basis. A None value in this list means that the corresponding operation
+        is not parametrised. A None value for the whole list (default value)
+        means that no gate in the basis is parametrised.
         """
-        self._sequences = [
-            generate_random_gate_sequence(basis, length, parameters_bounds) for
-            _ in range(p)]
+        self._qubit_number = objective_unitary.shape[0].bit_length() - 1
+        self._circuits = [
+            qc_gen.generate_random_quantum_circuit(self._qubit_number, basis,
+                                                   length, parameters_bounds)
+            for _ in range(p)]
         self._basis = basis
         self._r = r
+        self._length = length
         self._param_bounds = parameters_bounds
         if self._param_bounds is None:
-            self._param_bounds = numpy.zeros((2, length))
+            self._param_bounds = [None] * self._qubit_number
         self._correctness_weight = correctness_weight
         self._circuit_cost_weight = circuit_cost_weight
         self._circuit_cost_func = circuit_cost_func
 
         self._objective_unitary = objective_unitary
         self._costs = numpy.zeros((p,), dtype=numpy.float)
-        self.update_costs()
+        self._update_costs()
 
-    def update_costs(self):
+    def _update_costs(self):
         """Update the cached costs.
 
         This method should be called after one or more sequence(s) of the group
         changed in order to update the cached costs.
         """
-        for i in range(len(self._sequences)):
-            self._costs[i] = qdists.gloa_objective_function(self._sequences[i],
+        for i in range(len(self._circuits)):
+            self._costs[i] = qdists.gloa_objective_function(self._circuits[i],
                                                             self._objective_unitary,
                                                             self._correctness_weight,
                                                             self._circuit_cost_weight,
                                                             self._circuit_cost_func)
 
-    def get_leader(self) -> typing.Tuple[float, QuantumGateSequence]:
+    def get_leader(self) -> typing.Tuple[float, qcirc.QuantumCircuit]:
         """Get the best sequence of the group.
 
         The cached costs should be up to date before calling this function. See
@@ -115,7 +118,7 @@ class GateSequenceGroup:
         :return: the best sequence of the group along with its cost.
         """
         idx: int = numpy.argmin(self._costs)
-        return self._costs[idx], self._sequences[idx]
+        return self._costs[idx], self._circuits[idx]
 
     def mutate_and_recombine(self) -> None:
         """Apply the mutate and recombine step of the GLOA.
@@ -124,49 +127,55 @@ class GateSequenceGroup:
         """
         # Pre-compute group leader data.
         _, leader = self.get_leader()
-        leader_gates = leader.gates
-        leader_parameters = leader.params
-
-        # Used to rescale the random values in [0, 1) for the parameters.
-        a, b = self._param_bounds[0], self._param_bounds[1]
 
         # For each member of the group, mutate and recombine it and see if the
         # newly created member is better.
-        for seq_idx, sequence in enumerate(self._sequences):
-            # Create random gates
-            random_gates = numpy.random.randint(0, len(self._basis),
-                                                size=len(sequence.gates))
-            # Combine the leader's gates, the current sequence's gates and the
-            # random gates to mutate the current sequence.
-            new_sequence_gates = numpy.array([numpy.random.choice(
-                [sequence.gates[i], leader_gates[i], random_gates[i]],
-                p=self._r) for i in range(len(sequence.gates))])
-            # Create random parameters within the provided bounds.
-            random_params = numpy.random.rand(len(sequence.gates)) * (
-                b[new_sequence_gates] - a[new_sequence_gates]) + a[
-                                new_sequence_gates]
-            # Combine all the parameters to create a new set of parameters.
-            new_sequence_parameters = sequence.params * self._r[
-                0] + leader_parameters * self._r[1] + random_params * self._r[2]
+        for seq_idx, current in enumerate(self._circuits):
+            new_circuit = qcirc.QuantumCircuit(self._qubit_number,
+                                               cache_matrix=True)
+            random = qc_gen.generate_random_quantum_circuit(self._qubit_number,
+                                                            self._basis,
+                                                            self._length,
+                                                            self._param_bounds)
 
-            # Create the new sequence
-            new_sequence = QuantumGateSequence(self._basis, new_sequence_gates,
-                                               new_sequence_parameters)
-            # Save the cost of the current sequence.
-            current_sequence_cost = self._costs[seq_idx]
-            # Check if the new sequence is better and change it if better.
-            new_sequence_cost = qdists.gloa_objective_function(new_sequence,
-                                                               self._objective_unitary,
-                                                               self._correctness_weight,
-                                                               self._circuit_cost_weight,
-                                                               self._circuit_cost_func)
-            if new_sequence_cost < current_sequence_cost:
-                self._sequences[seq_idx] = new_sequence
-        self.update_costs()
+            for ops in zip(current.operations, leader.operations,
+                           random.operations):
+                new_circuit.add_operation(self._combine_operations(ops))
+
+            new_cost = qdists.gloa_objective_function(new_circuit,
+                                                      self._objective_unitary,
+                                                      self._correctness_weight,
+                                                      self._circuit_cost_weight,
+                                                      self._circuit_cost_func)
+            if new_cost < self._costs[seq_idx]:
+                self._circuits[seq_idx] = new_circuit
+                self._costs[seq_idx] = new_cost
+        return
+
+    def _combine_operations(self, operations: typing.Sequence[
+        qop.QuantumOperation]) -> qop.QuantumOperation:
+        op1, op2, op3 = operations[0], operations[1], operations[2]
+
+        new_operation = copy.copy(numpy.random.choice(operations, p=self._r))
+        control_number = len(new_operation.controls)
+        new_operation.controls = []
+        new_operation.target = numpy.random.choice(
+            [op1.target, op2.target, op3.target], p=self._r)
+
+        while len(new_operation.controls) < control_number:
+            ctrl = numpy.random.randint(0, self._qubit_number)
+            if ctrl != new_operation.target and ctrl not in \
+                new_operation.controls:
+                new_operation.controls.append(ctrl)
+
+        if new_operation.is_parametrised():
+            raise NotImplementedError(
+                "Parametrised operations are not supported for the moment.")
+        return new_operation
 
     @property
-    def sequences(self) -> typing.List[QuantumGateSequence]:
-        return self._sequences
+    def circuits(self) -> typing.List[qcirc.QuantumCircuit]:
+        return self._circuits
 
     @property
     def costs(self):

@@ -33,8 +33,7 @@ import numpy
 
 import qtoolkit.algorithms.group_leader as gloa
 import qtoolkit.maths.matrix.distances as qdists
-import qtoolkit.maths.matrix.generation.su2 as su2_gen
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.operations as qopconsts
 import qtoolkit.utils.timeit as qtimeit
 
 
@@ -49,21 +48,21 @@ def gatesequence2str(basis, basis_str, gate_sequence):
 
 
 # Define the parameters of the algorithm
-basis = [qconsts.H, qconsts.T, qconsts.T.T.conj(), qconsts.Rx, qconsts.Ry,
-         qconsts.Rz]
-basis_str = ['H', 'T', 'T+', 'Rx', 'Ry', 'Rz']
-bounds = numpy.array(
-    [[0, 0, 0, 0, 0, 0], [0, 0, 0, 2 * numpy.pi, 2 * numpy.pi, 2 * numpy.pi]])
+basis = [qopconsts.H, qopconsts.T, qopconsts.T.H, qopconsts.Rx, qopconsts.Ry,
+         qopconsts.Rz]
+bounds = [None, None, None, numpy.array([[0], [2 * numpy.pi]]),
+          numpy.array([[0], [2 * numpy.pi]]),
+          numpy.array([[0], [2 * numpy.pi]])]
 timer = qtimeit.Timer()
 
 # 1. Generate the random unitary we want to approximate.
-U = su2_gen.generate_random_SU2_matrix()
-# U = numpy.array([[0.11326673 + 0.64963326j, -0.39678188 + 0.63852284j],
-#                  [0.39678188 + 0.63852284j, 0.11326673 - 0.64963326j]])
+# U = sud_gen.generate_random_SUd(2)
+U = numpy.array([[0.11326673 + 0.64963326j, -0.39678188 + 0.63852284j],
+                 [0.39678188 + 0.63852284j, 0.11326673 - 0.64963326j]])
 
 # 3. Approximate it.
 timer.tic()
-cost, U_approx = gloa.group_leader(U, length=40, n=15, p=25, basis=basis,
+cost, U_approx = gloa.group_leader(U, length=40, n=10, p=15, basis=basis,
                                    max_iter=20, parameters_bound=bounds)
 timer.toc("GLOA algorithm")
 
@@ -71,5 +70,4 @@ print("Decomposition characteristics:")
 print(f"Fowler error: {qdists.fowler_distance(U, U_approx.matrix)}.")
 print(f"Trace error:  {qdists.trace_distance(U, U_approx.matrix)}.")
 print(f"GLOA cost:    {cost}.")
-print(f"Gate count:   {len(U_approx.gates)}")
-print(f"Gate sequence:\n\t{gatesequence2str(basis, basis_str, U_approx)}")
+print(f"Gate count:   {len(list(U_approx.operations))}")
