@@ -34,7 +34,7 @@
 import unittest
 
 import qtoolkit.maths.matrix.generation.unitary as gen_unitary
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.others as other_consts
 import tests.qtestcase as qtest
 
 
@@ -44,8 +44,8 @@ class UnitaryTestCase(qtest.QTestCase):
     def test_random_unitary_matrix(self) -> None:
         """Tests if the matrices obtained by generate_random_SU2_matrix
         are in SU(2)."""
-        if qconsts.USE_RANDOM_TESTS:
-            for _ in range(qconsts.RANDOM_SAMPLES):
+        if other_consts.USE_RANDOM_TESTS:
+            for _ in range(other_consts.RANDOM_SAMPLES):
                 M = gen_unitary.generate_random_unitary_matrix()
                 self.assertUnitaryMatrix(M)
 

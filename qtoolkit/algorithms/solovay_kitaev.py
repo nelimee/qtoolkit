@@ -30,30 +30,56 @@
 # ======================================================================
 
 import qtoolkit.data_structures.nearest_neighbour_structure as nn_struct
-import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
+import qtoolkit.data_structures.nearest_neighbour_structure as qnn
+import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.maths.matrix.su2.group_commutator as su2_gc
-import qtoolkit.maths.matrix.su2.transformations as su2_trans
+import qtoolkit.maths.matrix.sud.group_commutator as sud_gc
 import qtoolkit.utils.types as qtypes
+
+
+def solovay_kitaev(U: qtypes.UnitaryMatrix, recursion_level: int,
+                   approximations: qnn.NearestNeighbourStructure) -> \
+    qcirc.QuantumCircuit:
+    """Implementation of the Solovay-Kitaev theorem for unitary matrices.
+
+    The implementation follows https://github.com/cmdawson/sk.
+
+    :param U: The unitary matrix to decompose.
+    :param recursion_level: The number of recursive calls.
+    :param approximations: An efficient structure to perform nearest-neighbour
+    queries on unitary matrices. The structure needs to return an instance of
+    the QuantumGateSequence class.
+    :return: a sequence of quantum gates approximating the given unitary matrix
+    U.
+    """
+    if recursion_level == 0:
+        _, approximation = approximations.query(U)
+        return approximation
+    Un_1 = solovay_kitaev(U, recursion_level - 1, approximations)
+    V, W = sud_gc.group_commutator(U @ Un_1.matrix.T.conj())
+    Vn_1 = solovay_kitaev(V, recursion_level - 1, approximations)
+    Wn_1 = solovay_kitaev(W, recursion_level - 1, approximations)
+    return Vn_1 @ Wn_1 @ Vn_1.inverse() @ Wn_1.inverse() @ Un_1
 
 
 def solovay_kitaev_su2(U: qtypes.SU2Matrix, recursion_level: int,
                        approximations: nn_struct.NearestNeighbourStructure) \
-    -> qgate_seq.QuantumGateSequence:
-    """Implementation of the Solovay-Kitaev theorem.
+    -> qcirc.QuantumCircuit:
+    """Implementation of the Solovay-Kitaev theorem for SU(2) matrices.
 
     The implementation follows https://github.com/cmdawson/sk.
 
-    :param U: The unitary to decompose.
+    :param U: The SU(2) matrix to decompose.
     :param recursion_level: The number of recursive calls.
     :param approximations: An efficient structure to perform nearest-neighbour
     queries on SO(3) vectors.
-    :return:
+    :return: a sequence of quantum gates approximating the given SU(2) matrix U.
     """
     if recursion_level == 0:
-        _, approx_qgate_seq = approximations.query(su2_trans.su2_to_so3(U))
+        _, approx_qgate_seq = approximations.query(U)
         return approx_qgate_seq
     Un_1 = solovay_kitaev_su2(U, recursion_level - 1, approximations)
-    V, W = su2_gc.su2_group_commutator_decompose(U @ Un_1.matrix.T.conj())
+    V, W = su2_gc.group_commutator(U @ Un_1.matrix.T.conj())
     Vn_1 = solovay_kitaev_su2(V, recursion_level - 1, approximations)
     Wn_1 = solovay_kitaev_su2(W, recursion_level - 1, approximations)
     return Vn_1 @ Wn_1 @ Vn_1.inverse() @ Wn_1.inverse() @ Un_1

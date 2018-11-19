@@ -29,26 +29,33 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+import typing
 
-import unittest
-
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
-
-
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
-
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
+from qtoolkit.data_structures.quantum_circuit.quantum_circuit import \
+    QuantumCircuit
+from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
+    import \
+    SimplificationRule
 
 
-if __name__ == '__main__':
-    unittest.main()
+class GateSequenceSimplifier:
+
+    def __init__(self,
+                 simplifications: typing.List[SimplificationRule]) -> None:
+        self._rules = simplifications
+
+    def add_rule(self, rule: SimplificationRule) -> None:
+        self._rules.append(rule)
+
+    def is_simplifiable(self, quantum_circuit: QuantumCircuit) -> bool:
+        for rule in self._rules:
+            if rule.is_simplifiable(quantum_circuit):
+                return True
+        return False
+
+    def is_simplifiable_from_last(self,
+                                  quantum_circuit: QuantumCircuit) -> bool:
+        for rule in self._rules:
+            if rule.is_simplifiable_from_last(quantum_circuit):
+                return True
+        return False

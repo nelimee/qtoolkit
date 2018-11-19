@@ -36,7 +36,7 @@ import unittest
 import numpy
 
 import qtoolkit.maths.matrix.distances as qdists
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.matrices as mconsts
 import qtoolkit.utils.types as qtypes
 
 
@@ -99,7 +99,7 @@ class QTestCase(unittest.TestCase):
 
         :param M: The matrix to check.
         """
-        self.assert2NormClose(qconsts.ID2_SU2, M @ M.T.conj())
+        self.assert2NormClose(mconsts.ID2_SU2, M @ M.T.conj())
 
     def assertAllClose(self, A: qtypes.GenericArray, B: qtypes.GenericArray,
                        rtol: float = 1e-5, atol: float = 1e-8) -> None:
@@ -107,8 +107,12 @@ class QTestCase(unittest.TestCase):
 
         :param A: First array to compare.
         :param B: Second array to compare.
+        :param rtol: Relative tolerance. See numpy.isclose documentation
+        for a more detailed explanation.
+        :param atol: Absolute tolerance. See numpy.isclose documentation
+        for a more detailed explanation.
         """
-        message = (f"Arrays A = \n{A}\nand B = \n{B}\nare not close enough!")
+        message = f"Arrays A = \n{A}\nand B = \n{B}\nare not close enough!"
         self.assertTrue(numpy.allclose(A, B, rtol=rtol, atol=atol), message)
 
     def assertAllEqual(self, A: qtypes.GenericArray,
@@ -118,5 +122,5 @@ class QTestCase(unittest.TestCase):
         :param A: First array to compare.
         :param B: Second array to compare.
         """
-        message = (f"Arrays A = \n{A}\nand B = \n{B}\nare not equal!")
+        message = f"Arrays A = \n{A}\nand B = \n{B}\nare not equal!"
         self.assertTrue(numpy.all(A == B), message)

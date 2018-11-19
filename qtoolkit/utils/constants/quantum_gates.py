@@ -29,26 +29,34 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
-
-import unittest
-
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
+import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
+import qtoolkit.utils.constants.matrices as mconsts
 
 
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
-
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
+def _self_inverse(gate: qgates.QuantumGate) -> qgates.QuantumGate:
+    return gate
 
 
-if __name__ == '__main__':
-    unittest.main()
+def _generic_inverse(gate: qgates.QuantumGate) -> qgates.QuantumGate:
+    name = (gate.name + '+').replace('++', '')
+    return qgates.QuantumGate(name, gate.matrix.T.conj(), _generic_inverse,
+                              parameters=gate.parameters)
+
+
+def _inverse_angle(gate: qgates.QuantumGate) -> qgates.QuantumGate:
+    return qgates.QuantumGate(gate.name, gate.matrix.T.conj(), _inverse_angle,
+                              parameters=-gate.parameters)
+
+
+X = qgates.QuantumGate('X', mconsts.X, _self_inverse)
+Y = qgates.QuantumGate('Y', mconsts.Y, _self_inverse)
+Z = qgates.QuantumGate('Z', mconsts.Z, _self_inverse)
+H = qgates.QuantumGate('H', mconsts.H, _self_inverse)
+S = qgates.QuantumGate('S', mconsts.S, _generic_inverse)
+T = qgates.QuantumGate('T', mconsts.T, _generic_inverse)
+ID = qgates.QuantumGate('Id', mconsts.ID2, _self_inverse)
+CX = qgates.QuantumGate('CX', mconsts.CX, _self_inverse)
+
+Rx = qgates.ParametrisedQuantumGate('Rx', mconsts.Rx, _inverse_angle)
+Ry = qgates.ParametrisedQuantumGate('Ry', mconsts.Ry, _inverse_angle)
+Rz = qgates.ParametrisedQuantumGate('Rz', mconsts.Rz, _inverse_angle)

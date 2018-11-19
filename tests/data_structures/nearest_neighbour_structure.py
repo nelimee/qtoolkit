@@ -35,11 +35,10 @@ import unittest
 
 import numpy
 
-import qtoolkit.data_structures.nearest_neighbour_structure as NNstruct
+import qtoolkit.data_structures.nearest_neighbour_structure as nn_structure
 import qtoolkit.data_structures.quantum_gate_sequence as qgate_seq
 import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.maths.matrix.su2.transformations as su2_trans
-import qtoolkit.utils.constants as qconsts
+import qtoolkit.utils.constants.matrices as mconsts
 import tests.qtestcase as qtest
 
 
@@ -57,58 +56,40 @@ class NearestNeighbourStructureTestCase(qtest.QTestCase):
         dataset_size = 1000
         dimension = 3
 
-        cls._basis = [qconsts.H_SU2, qconsts.T_SU2, qconsts.T_SU2.T.conj()]
+        cls._basis = [mconsts.H_SU2, mconsts.T_SU2, mconsts.T_SU2.T.conj()]
         cls._sequences = [qgate_seq.QuantumGateSequence(cls._basis,
                                                         numpy.random.randint(0,
                                                                              len(
                                                                                  cls._basis),
                                                                              5))
                           for _ in range(dataset_size)]
-        cls._data = numpy.array(
-            [su2_trans.su2_to_so3(seq.matrix) for seq in cls._sequences])
+        cls._data = numpy.array([seq.matrix for seq in cls._sequences])
+        cls._int_sequences = numpy.array([seq.gates for seq in cls._sequences])
 
-    def test_scipy_cKDTree_construction(self) -> None:
-        """Tests the construction with scipy.cKDTree as internal structure."""
-        NNstruct.NearestNeighbourStructure(self._data, 'cKDTree', 40,
-                                           self._sequences)
+    def test_construction(self) -> None:
+        """Tests the construction."""
+        # nn_structure.NearestNeighbourStructure(self._data,
+        # self._int_sequences,
+        #                                        self._basis)
+        pass
 
-    def test_sklearn_KDTree_construction(self) -> None:
-        """Tests the construction with sklearn.KDTree as internal structure."""
-        NNstruct.NearestNeighbourStructure(self._data, 'sklKDTree', 40,
-                                           self._sequences)
-
-    def test_sklearn_BallTree_construction(self) -> None:
-        """Tests the construction with slearn.BallTree as internal structure."""
-        NNstruct.NearestNeighbourStructure(self._data, 'sklBallTree', 40,
-                                           self._sequences)
-
-    def _random_query(self,
-                      nn_struct: NNstruct.NearestNeighbourStructure) -> None:
+    def _random_query_su2(self,
+                          nn_struct: nn_structure.NearestNeighbourStructure) \
+        -> None:
         """Perform a random query and check the validity of the result."""
         random_matrix = gen_su2.generate_random_SU2_matrix()
-        query = su2_trans.su2_to_so3(random_matrix)
-        dist, res = nn_struct.query(query)
-        error = numpy.linalg.norm(query - su2_trans.su2_to_so3(res.matrix))
+        dist, res = nn_struct.query(random_matrix)
+        error = numpy.linalg.norm(random_matrix - res.matrix)
         self.assertAlmostEqual(error, dist)
 
-    def test_scipy_cKDTree_query(self) -> None:
-        """Tests query validity with scipy.cKDTree as internal structure."""
-        nn_struct = NNstruct.NearestNeighbourStructure(self._data, 'cKDTree',
-                                                       40, self._sequences)
-        self._random_query(nn_struct)
-
-    def test_sklearn_KDTree_query(self) -> None:
-        """Tests query validity with sklearn.KDTree as internal structure."""
-        nn_struct = NNstruct.NearestNeighbourStructure(self._data, 'sklKDTree',
-                                                       40, self._sequences)
-        self._random_query(nn_struct)
-
-    def test_sklearn_BallTree_query(self) -> None:
-        """Tests query validity with sklearn.BallTree as internal structure."""
-        nn_struct = NNstruct.NearestNeighbourStructure(self._data,
-                                                       'sklBallTree', 40,
-                                                       self._sequences)
-        self._random_query(nn_struct)
+    def test_query_su2(self) -> None:
+        """Tests query validity."""
+        # nn_struct = nn_structure.NearestNeighbourStructure(self._data,
+        #
+        # self._int_sequences,
+        #                                                    self._basis)
+        # self._random_query_su2(nn_struct)
+        pass
 
 
 if __name__ == '__main__':

@@ -29,26 +29,12 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+import os.path
 
-import unittest
+# Test-related constants
+USE_RANDOM_TESTS = True
+RANDOM_SAMPLES = 100
 
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
-
-
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
-
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
-
-
-if __name__ == '__main__':
-    unittest.main()
+this_dir = os.path.dirname(os.path.realpath(__file__))
+qtoolkit_dir = os.path.dirname(os.path.dirname(this_dir))
+data_dir = os.path.join(qtoolkit_dir, "data")

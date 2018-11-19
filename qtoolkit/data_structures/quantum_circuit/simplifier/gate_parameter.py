@@ -29,26 +29,20 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
-
-import unittest
-
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
+import typing
 
 
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
+class GateParameter:
 
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
+    def __init__(self, identifier: typing.Union[int, str],
+                 transformation: typing.Callable[[float], float] = lambda
+                     x: x) -> None:
+        self._id = identifier
+        self._transformation = transformation
 
+    def apply_transformation(self, non_transformed_value: float) -> float:
+        return self._transformation(non_transformed_value)
 
-if __name__ == '__main__':
-    unittest.main()
+    @property
+    def id(self):
+        return self._id

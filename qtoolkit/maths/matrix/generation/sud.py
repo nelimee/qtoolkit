@@ -29,49 +29,45 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Declaring some useful constants for computations."""
+"""A set of functions to generate SU(d) matrices."""
 
 import numpy
+import numpy.random as rand
 
-# Test-related constants
-USE_RANDOM_TESTS = True
-RANDOM_SAMPLES = 100
+import qtoolkit.utils.types as qtypes
 
-# Pauli matrices
-# Definitions with sigma
-SIGMA_X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
-SIGMA_Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
-SIGMA_Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)
-SIGMA_X_SU2 = SIGMA_X / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_X))
-SIGMA_Y_SU2 = SIGMA_Y / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_Y))
-SIGMA_Z_SU2 = SIGMA_Z / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_Z))
-# Aliases to the definitions with sigma
-P_X = SIGMA_X
-P_Y = SIGMA_Y
-P_Z = SIGMA_Z
-P_X_SU2 = SIGMA_X_SU2
-P_Y_SU2 = SIGMA_Y_SU2
-P_Z_SU2 = SIGMA_Z_SU2
 
-# Other matrices
-IDENTITY_2X2 = numpy.identity(2, dtype=numpy.complex)
-ID2 = IDENTITY_2X2
-# In SU(2)
-IDENTITY_2X2_SU2 = IDENTITY_2X2
-ID2_SU2 = ID2
+def generate_random_SUd(dim: int) -> qtypes.SUdMatrix:
+    """Generate a random matrix in SU(d).
 
-# Quantum gates constants
-X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
-Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
-Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)
-H = numpy.array([[1, 1], [1, -1]], dtype=numpy.complex) / numpy.sqrt(2)
-S = numpy.array([[1, 0], [0, 1.j]], dtype=numpy.complex)
-T = numpy.array([[1, 0], [0, numpy.exp(1.j * numpy.pi / 4)]],
-                dtype=numpy.complex)
-# Quantum gates in SU(2)
-X_SU2 = X / numpy.lib.scimath.sqrt(numpy.linalg.det(X))
-Y_SU2 = Y / numpy.lib.scimath.sqrt(numpy.linalg.det(Y))
-Z_SU2 = Z / numpy.lib.scimath.sqrt(numpy.linalg.det(Z))
-H_SU2 = H / numpy.lib.scimath.sqrt(numpy.linalg.det(H))
-S_SU2 = S / numpy.lib.scimath.sqrt(numpy.linalg.det(S))
-T_SU2 = T / numpy.lib.scimath.sqrt(numpy.linalg.det(T))
+    The algorithm implemented is presented in the article
+    https://arxiv.org/pdf/math-ph/0609050.pdf.
+
+    :param dim: dimension of the matrix to be generated.
+    :return: A random SU(d) matrix distributed with Haar measure.
+    """
+    Z = (rand.rand(dim, dim) + 1.j * rand.rand(dim, dim)) / numpy.sqrt(2)
+    return _complex_matrix_to_SUd(Z)
+
+
+def coefficient_to_SUd(coefficients: numpy.ndarray) -> qtypes.SUdMatrix:
+    """Generate the SU(d) matrix corresponding to the given coefficients.
+
+    :param coefficients: a vector of 2*(d**2) real numbers in [0, 1).
+    :return: the corresponding SU(d) matrix.
+    """
+    total_size = coefficients.size
+    each_matrix_size = total_size // 2
+    dim = int(numpy.floor(numpy.sqrt(each_matrix_size)))
+
+    real = coefficients[:dim * dim].reshape((dim, dim))
+    imag = coefficients[dim * dim:].reshape((dim, dim))
+
+    return _complex_matrix_to_SUd((real + 1.j * imag) / numpy.sqrt(2))
+
+
+def _complex_matrix_to_SUd(matrix: qtypes.GenericMatrix) -> qtypes.SUdMatrix:
+    Q, R = numpy.linalg.qr(matrix)
+    diag = numpy.diag(R)
+    D = numpy.diag(diag / numpy.abs(diag))
+    return Q @ D

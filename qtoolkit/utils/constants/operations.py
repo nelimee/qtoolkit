@@ -1,5 +1,5 @@
 # ======================================================================
-# Copyright CERFACS (October 2018)
+# Copyright CERFACS (November 2018)
 # Contributor: Adrien Suau (adrien.suau@cerfacs.fr)
 #
 # This software is governed by the CeCILL-B license under French law and
@@ -29,26 +29,21 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
+import qtoolkit.utils.constants.quantum_gates as qgconsts
 
-import unittest
+X = qop.QuantumOperation(qgconsts.X, None)
+Y = qop.QuantumOperation(qgconsts.Y, None)
+Z = qop.QuantumOperation(qgconsts.Z, None)
+H = qop.QuantumOperation(qgconsts.H, None)
+S = qop.QuantumOperation(qgconsts.S, None)
+T = qop.QuantumOperation(qgconsts.T, None)
+ID = qop.QuantumOperation(qgconsts.ID, None)
 
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
+Rx = qop.QuantumOperation(qgconsts.Rx, None, [], [None])
+Ry = qop.QuantumOperation(qgconsts.Ry, None, [], [None])
+Rz = qop.QuantumOperation(qgconsts.Rz, None, [], [None])
 
+CX = qop.QuantumOperation(qgconsts.X, None, [None])
 
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
-
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
-
-
-if __name__ == '__main__':
-    unittest.main()
+CCX = qop.QuantumOperation(qgconsts.X, None, [None, None])

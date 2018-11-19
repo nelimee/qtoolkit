@@ -29,26 +29,45 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+import numpy
 
-import unittest
-
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
-
-
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
-
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
+import qtoolkit.algorithms.group_leader as gloa
+import qtoolkit.maths.matrix.distances as qdists
+import qtoolkit.utils.constants.operations as qopconsts
+import qtoolkit.utils.timeit as qtimeit
 
 
-if __name__ == '__main__':
-    unittest.main()
+def gatesequence2str(basis, basis_str, gate_sequence):
+    def gate2str(gate, gate_str, param) -> str:
+        return gate_str + (f"({param})" if callable(gate) else "")
+
+    sequence = gate_sequence.gates
+    parameters = gate_sequence.params
+    return "".join(
+        [gate2str(basis[i], basis_str[i], parameters[i]) for i in sequence])
+
+
+# Define the parameters of the algorithm
+basis = [qopconsts.H, qopconsts.T, qopconsts.T.H, qopconsts.Rx, qopconsts.Ry,
+         qopconsts.Rz]
+bounds = [None, None, None, numpy.array([[0], [2 * numpy.pi]]),
+          numpy.array([[0], [2 * numpy.pi]]),
+          numpy.array([[0], [2 * numpy.pi]])]
+timer = qtimeit.Timer()
+
+# 1. Generate the random unitary we want to approximate.
+# U = sud_gen.generate_random_SUd(2)
+U = numpy.array([[0.11326673 + 0.64963326j, -0.39678188 + 0.63852284j],
+                 [0.39678188 + 0.63852284j, 0.11326673 - 0.64963326j]])
+
+# 3. Approximate it.
+timer.tic()
+cost, U_approx = gloa.group_leader(U, length=40, n=10, p=15, basis=basis,
+                                   max_iter=20, parameters_bound=bounds)
+timer.toc("GLOA algorithm")
+
+print("Decomposition characteristics:")
+print(f"Fowler error: {qdists.fowler_distance(U, U_approx.matrix)}.")
+print(f"Trace error:  {qdists.trace_distance(U, U_approx.matrix)}.")
+print(f"GLOA cost:    {cost}.")
+print(f"Gate count:   {len(list(U_approx.operations))}")

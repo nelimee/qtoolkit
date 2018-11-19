@@ -29,26 +29,33 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Test of the procedures used to generate SU(2) matrices."""
+import typing
 
-import unittest
+import numpy.random
 
-import qtoolkit.maths.matrix.generation.su2 as gen_su2
-import qtoolkit.utils.constants.others as other_consts
-import tests.qtestcase as qtest
-
-
-class Su2TestCase(qtest.QTestCase):
-    """Unit-test for the SU(2) generation functions."""
-
-    def test_random_su2_matrix(self) -> None:
-        """Tests if the matrices obtained by generate_random_SU2_matrix
-        are in SU(2)."""
-        if other_consts.USE_RANDOM_TESTS:
-            for _ in range(other_consts.RANDOM_SAMPLES):
-                M = gen_su2.generate_random_SU2_matrix()
-                self.assertSU2Matrix(M)
+import qtoolkit.utils.types as qtypes
+from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
 
 
-if __name__ == '__main__':
-    unittest.main()
+def generate_random_gate_sequence(
+    basis: typing.Sequence[qtypes.SUdMatrixGenerator], length: int,
+    parameters_bounds: typing.Optional[
+        numpy.ndarray] = None) -> QuantumGateSequence:
+    """Generate a random gate sequence.
+
+    :param basis: basis used to generate the sequence.
+    :param length: length of the random sequence generated.
+    :param parameters_bounds: bounds for the parameters. All the irrelevant
+    parameters can be set to any value and will not be accessed.
+    :return: a random quantum gate sequence.
+    """
+    sequence = numpy.random.randint(0, len(basis), size=length)
+    if parameters_bounds is not None:
+        a, b = parameters_bounds[0], parameters_bounds[1]
+        parameters = numpy.random.rand(length) * (b[sequence] - a[sequence]) + \
+                     a[sequence]
+
+    else:
+        parameters = None
+
+    return QuantumGateSequence(basis, sequence, parameters)
