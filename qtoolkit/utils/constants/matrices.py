@@ -74,21 +74,24 @@ CX = numpy.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
                  dtype=numpy.complex)
 
 
-def Rx(theta: float) -> qtypes.SU2Matrix:
+def Rx(parameters: numpy.ndarray) -> qtypes.SU2Matrix:
+    theta = parameters[0]
     cos_theta_2 = numpy.cos(theta / 2)
     isin_theta_2 = -1.j * numpy.sin(theta / 2)
     return numpy.array(
         [[cos_theta_2, isin_theta_2], [isin_theta_2, cos_theta_2]])
 
 
-def Ry(theta: float) -> qtypes.SU2Matrix:
+def Ry(parameters: numpy.ndarray) -> qtypes.SU2Matrix:
+    theta = parameters[0]
     cos_theta_2 = numpy.cos(theta / 2)
     sin_theta_2 = numpy.sin(theta / 2)
     return numpy.array(
         [[cos_theta_2, -sin_theta_2], [sin_theta_2, cos_theta_2]])
 
 
-def Rz(theta: float) -> qtypes.SU2Matrix:
+def Rz(parameters: numpy.ndarray) -> qtypes.SU2Matrix:
+    theta = parameters[0]
     e_itheta_2 = numpy.exp(1.j * theta / 2)
     return numpy.array([[1 / e_itheta_2, 0], [0, e_itheta_2]])
 
