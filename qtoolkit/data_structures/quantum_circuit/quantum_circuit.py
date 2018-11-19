@@ -180,6 +180,9 @@ class QuantumCircuit:
         # the given qubit.
         return self.get_n_last_operations_on_qubit(self._node_counter, qubit_id)
 
+    def __getitem__(self, idx: int) -> qop.QuantumOperation:
+        return self._graph.nodes[idx + self._qubit_number]['op']
+
     @property
     def last(self):
         if self._node_counter > self._qubit_number:
