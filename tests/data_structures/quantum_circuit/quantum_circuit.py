@@ -64,8 +64,8 @@ class QuantumCircuitTestCase(qtest.QTestCase):
         qcirc.QuantumCircuit(10)
 
     def test_size(self) -> None:
-        self.assertEqual(self._circ1.size, 1)
-        self.assertEqual(self._circ3.size, 3)
+        self.assertEqual(self._circ1.qubit_number, 1)
+        self.assertEqual(self._circ3.qubit_number, 3)
 
     def test_apply_simple(self) -> None:
         self._circ1.apply(qgconsts.X, 0)
