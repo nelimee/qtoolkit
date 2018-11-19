@@ -158,7 +158,7 @@ class QuantumCircuit:
         :return: an iterable of at most n items.
         """
         current = self._last_inserted_operations[qubit_id]
-        while n > 0 and current >= self.size:
+        while n > 0 and current >= self.qubit_number:
             yield self._graph.nodes[current]['op']
             n -= 1
             # Update the current node.
@@ -235,7 +235,7 @@ class QuantumCircuit:
         return ret
 
     @property
-    def size(self):
+    def qubit_number(self):
         """Getter on the number of qubits of the current instance."""
         return self._qubit_number
 
@@ -247,30 +247,31 @@ class QuantumCircuit:
         :return: The union of self and other.
         """
         # 1. Checks
-        if self.size != other.size:
-            raise RuntimeError(
-                f"The number of qubits of the first circuit ({self.size}) does "
-                f"not match the number of qubits of the second circuit "
-                f"({other.size}).")
+        if self.qubit_number != other.qubit_number:
+            raise RuntimeError(f"The number of qubits of the first circuit "
+                               f"({self.qubit_number}) does not match the "
+                               f"number of qubits of the second circuit "
+                               f"({other.qubit_number}).")
         # 2. Update the graph
         # 2.1. First remove the "input" nodes from the other graph. We don't
         # want to change or copy the other graph so we take a view of the other
         # graph without the "input" nodes.
         other_subgraph = other._graph.subgraph(
-            range(other.size, other._node_counter))
+            range(other.qubit_number, other._node_counter))
         # 2.2. Regroup the two graphs into one graph.
         self._graph = nx.disjoint_union(self._graph, other_subgraph)
         # 2.3. Join the nodes if possible.
-        for qubit_index in range(self.size):
+        for qubit_index in range(self.qubit_number):
             old_neighbor = list(other._graph.neighbors(qubit_index))
             if old_neighbor:
-                new_neighbor = old_neighbor[0] - other.size + self._node_counter
+                new_neighbor = old_neighbor[
+                                   0] - other.qubit_number + self._node_counter
                 self._graph.add_edge(
                     self._last_inserted_operations[qubit_index], new_neighbor)
                 # Only change the last inserted index if we joined the nodes.
                 self._last_inserted_operations[qubit_index] = new_neighbor
         # 3. Update the other attributes:
-        self._node_counter += other._node_counter - other.size
+        self._node_counter += other._node_counter - other.qubit_number
         if self._cache_matrix and other._matrix is not None:
             self._matrix = self.matrix @ other.matrix
 
