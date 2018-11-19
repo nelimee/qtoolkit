@@ -33,6 +33,8 @@
 
 import typing
 
+import numpy
+
 import qtoolkit.utils.types as qtypes
 
 
@@ -84,8 +86,9 @@ class ParametrisedQuantumGate(QuantumInstruction):
         :return: a QuantumGate corresponding to the current parametrised
         quantum gate with the given parameters.
         """
-        return QuantumGate(self.name, self._matrix_generator(*args, **kwargs),
-                           self._inverse_callable, parameters=args)
+        params = numpy.array(args)
+        return QuantumGate(self.name, self._matrix_generator(params, **kwargs),
+                           self._inverse_callable, parameters=params)
 
 
 class QuantumGate(QuantumInstruction):
@@ -93,7 +96,7 @@ class QuantumGate(QuantumInstruction):
 
     def __init__(self, name: str, matrix: qtypes.UnitaryMatrix,
                  inverse: typing.Callable[['QuantumGate'], 'QuantumGate'],
-                 parameters: typing.Tuple[float] = tuple()) -> None:
+                 parameters: typing.Optional[numpy.ndarray] = None) -> None:
         """Initialise the QuantumGate instance.
 
         :param name: name of the quantum gate.
