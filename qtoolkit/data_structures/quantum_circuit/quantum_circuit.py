@@ -242,6 +242,10 @@ class QuantumCircuit:
         """Getter on the number of qubits of the current instance."""
         return self._qubit_number
 
+    @property
+    def size(self):
+        return self._node_counter - self._qubit_number
+
     def __iadd__(self, other: 'QuantumCircuit') -> 'QuantumCircuit':
         """Add all the operations contained in other to the current instance.
 
