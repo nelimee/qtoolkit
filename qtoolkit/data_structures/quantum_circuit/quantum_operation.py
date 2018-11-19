@@ -205,7 +205,7 @@ class QuantumOperation:
 
     def __call__(self, *args, **kwargs) -> 'QuantumOperation':
         return QuantumOperation(self._gate(*args, **kwargs), self.target,
-                                self.controls)
+                                self.controls, args)
 
 
 def control(operation: QuantumOperation, *controls: int) -> QuantumOperation:
