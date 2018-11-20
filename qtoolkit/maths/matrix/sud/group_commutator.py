@@ -55,8 +55,6 @@ def group_commutator(U: qtypes.SUdMatrix) -> typing.Tuple[
         U_i = numpy.diag(eigvals[2 * i:2 * (i + 1)])
         V_i, W_i = gc_su2.group_commutator(U_i)
         a, b = 2 * i, 2 * i + 1
-        # Vt[2 * i, 2 * i], Vt[2 * i + 1, 2 * i + 1] = V_i[0, 0], V_i[1, 1]
-        # Wt[2 * i, 2 * i], Wt[2 * i + 1, 2 * i + 1] = W_i[0, 0], W_i[1, 1]
         Vt[a:b + 1, a:b + 1] = V_i
         Wt[a:b + 1, a:b + 1] = W_i
     V, W = eigvecs @ Vt @ eigvecs.T.conj(), eigvecs @ Wt @ eigvecs.T.conj()
