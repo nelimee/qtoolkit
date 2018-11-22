@@ -18,7 +18,6 @@ import sys
 # Make sure that the module is in the PYTHONPATH.
 sys.path.insert(0, os.path.abspath('../'))
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'qtoolkit'
@@ -30,7 +29,6 @@ version = ''
 # The full version, including alpha/beta/rc tags
 release = ''
 
-
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -41,8 +39,8 @@ release = ''
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.coverage',
-    'sphinx.ext.mathjax', 'sphinx.ext.viewcode', 'sphinx.ext.githubpages',
-    'sphinx_autodoc_typehints', ]
+              'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
+              'sphinx.ext.githubpages', 'sphinx_autodoc_typehints', ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -66,7 +64,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'scripts/*']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
@@ -106,7 +104,6 @@ html_static_path = ['_static']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'qtoolkitdoc'
 
-
 # -- Options for LaTeX output ------------------------------------------------
 
 latex_elements = {
@@ -131,9 +128,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [(
-master_doc, 'qtoolkit.tex', 'qtoolkit Documentation', 'Adrien Suau',
-'manual'), ]
-
+    master_doc, 'qtoolkit.tex', 'qtoolkit Documentation', 'Adrien Suau',
+    'manual'), ]
 
 # -- Options for manual page output ------------------------------------------
 
@@ -141,16 +137,14 @@ master_doc, 'qtoolkit.tex', 'qtoolkit Documentation', 'Adrien Suau',
 # (source start file, name, description, authors, manual section).
 man_pages = [(master_doc, 'qtoolkit', 'qtoolkit Documentation', [author], 1)]
 
-
 # -- Options for Texinfo output ----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [(
-master_doc, 'qtoolkit', 'qtoolkit Documentation', author, 'qtoolkit',
-'One line description of project.', 'Miscellaneous'), ]
-
+    master_doc, 'qtoolkit', 'qtoolkit Documentation', author, 'qtoolkit',
+    'One line description of project.', 'Miscellaneous'), ]
 
 # -- Options for Epub output -------------------------------------------------
 
