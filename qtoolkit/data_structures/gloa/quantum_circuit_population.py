@@ -67,8 +67,8 @@ class QuantumCircuitPopulation:
         :param n: number of groups.
         :param population: population of the group, i.e. number of gate
             sequences contained in this group.
-        :param r: rates determining the portion of old (`r`[0]), leader (`r`[1])
-            and random (`r`[2]) that are used to generate new candidates.
+        :param r: rates determining the portion of old (r[0]), leader (r[1]) and
+            random (r[2]) that are used to generate new candidates.
         :param correctness_weight: scalar representing the importance attached
             to the correctness of the generated circuit.
         :param circuit_cost_weight: scalar representing the importance attached

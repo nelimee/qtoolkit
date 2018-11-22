@@ -42,19 +42,6 @@ import qtoolkit.utils.constants.matrices as mconsts
 
 
 class QuantumOperation:
-    """A class representing a quantum operation.
-
-    For the moment, the QuantumOperation class only support 1-qubit gates
-    with arbitrary controls. In the real world, this is not really a huge
-    limitation as most of the quantum hardware only supports 1-qubit gates
-    and one controlled operation like CX.
-
-    If any of the value of controls or the value of target are None, this
-    means that the operation is "abstract", i.e. it represent the general
-    operation, not applied to a particular case.
-    For example, QuantumOperation(X, None, [None, None]) represents the
-    doubly-controlled X operation.
-    """
 
     def __init__(self,
                  gate: typing.Union[gh.QuantumGate, gh.ParametrisedQuantumGate],
@@ -62,17 +49,27 @@ class QuantumOperation:
                  controls: Optional[typing.Sequence[Optional[int]]] = None,
                  parameters: Optional[
                      typing.Sequence[Optional[float]]] = None) -> None:
-        """Initialise the QuantumOperation instance.
+        """A class representing a quantum operation.
+
+        For the moment, the QuantumOperation class only support 1-qubit gates
+        with arbitrary controls. In the real world, this is not really a huge
+        limitation as most of the quantum hardware only supports 1-qubit gates
+        and one controlled operation like CX.
+
+        If any of the value of controls or the value of target are None, this
+        means that the operation is "abstract", i.e. it represent the general
+        operation, not applied to a particular case.
+        For example, QuantumOperation(X, None, [None, None]) represents the
+        doubly-controlled X operation.
 
         :param gate: the 1-qubit quantum gate of the operation.
         :param target: the target qubit of the given quantum gate.
-        :param controls: an arbitrary number of control qubits. If the controls
-        parameter is None, this means that the gate is not controlled by any
-        qubit.
+        :param controls: an arbitrary number of control qubits. If `controls`
+            is None, this means that the gate is not controlled by any qubit.
         :param parameters: parameters of the given gate. A value of None can
-        means 2 things: if the provided gate is a ParametrisedQuantumGate, it
-        means that the operation represents the "abstract" operation, else, it
-        is just a reminder that the stored gate is not parametrised.
+            mean 2 things: if the provided gate is a ParametrisedQuantumGate,
+            then the operation represents an "abstract" operation, else it
+            is just a reminder that the stored gate is not parametrised.
         """
         if controls is None:
             controls = list()
