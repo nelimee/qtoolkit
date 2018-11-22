@@ -29,15 +29,33 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Implementation of the :py:class:`~.GateParameter` class."""
+
 import typing
 
 
 class GateParameter:
+    """Stores the relationship between multiple parameters in a
+    :py:class:`~.SimplificationRule`.
 
-    def __init__(self, identifier: typing.Union[int, str],
+    This class stores 2 attributes:
+
+    1. A hashable identifier.
+    2. A function taking a float as parameter and returning another float.
+
+    """
+
+    def __init__(self, rule_identifier: typing.Hashable,
                  transformation: typing.Callable[[float], float] = lambda
                      x: x) -> None:
-        self._id = identifier
+        """Initialise a :py:class:`~.GateParameter` instance.
+
+        :param rule_identifier: An identifier that will be shared by all
+            instances of :py:class:`~.GateParameter` that should match each
+            other.
+        :param transformation:
+        """
+        self._id = rule_identifier
         self._transformation = transformation
 
     def apply_transformation(self, non_transformed_value: float) -> float:

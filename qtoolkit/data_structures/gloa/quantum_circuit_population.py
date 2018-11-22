@@ -29,61 +29,63 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Implement the GateSequencePopulation class, used to implement GLOA."""
+"""Implement the :py:class:`~.QuantumCircuitPopulation` class used in GLOA.
+
+The :py:class:`~.QuantumCircuitPopulation` stores the groups of
+:py:class:`~.QuantumCircuit`.
+"""
 
 import copy
 import typing
 
 import numpy
 
-import qtoolkit.data_structures.gloa.gate_sequence_group as gsg
+import qtoolkit.data_structures.gloa.quantum_circuit_group as gsg
 import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
+import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 import qtoolkit.maths.matrix.distances as qdists
 import qtoolkit.utils.types as qtypes
 
 
-class GateSequencePopulation:
-    """A data structure containing several GateSequenceGroup instances."""
+class QuantumCircuitPopulation:
+    """A list of several :py:class:`QuantumCircuitGroup` instances."""
 
-    def __init__(self, basis: typing.Sequence[qtypes.SUdMatrixGenerator],
+    def __init__(self, basis: typing.Sequence[qop.QuantumOperation],
                  objective_unitary: qtypes.UnitaryMatrix, length: int, n: int,
                  population: int, r: numpy.ndarray, correctness_weight: float,
                  circuit_cost_weight: float,
                  circuit_cost_func: qcirc.CircuitCostFunction,
                  parameters_bounds: qtypes.Bounds = None) -> None:
-        """Initialise the GateSequencePopulation instance.
+        """Initialise the :py:class:`~.QuantumCircuitPopulation` instance.
 
-        :param basis: gates available to construct the approximation. Each gate
-        can be either a numpy.ndarray (which means that the gate is not
-        parametrised) or a callable that takes a float as input and returns a
-        numpy.ndarray representing the quantum gate.
+        :param basis: a sequence of allowed operations. The operations can be
+            "abstract" (i.e. with None entries, see the documentation for the
+            :py:class:`~.QuantumOperation` class) or not (i.e. with specified
+            entries).
         :param objective_unitary: unitary matrix we are trying to approximate.
-        :param length: length of the sequences that will be generated in each
-        group.
+        :param length: length of the sequences that will be generated.
         :param n: number of groups.
-        :param population: population of each group, i.e. number of gate
-        sequences
-        contained in each group.
-        :param r: rates determining the portion of old (r[0]), leader (r[1]) and
-        random (r[2]) that are used to generate new candidates.
+        :param population: population of the group, i.e. number of gate
+            sequences contained in this group.
+        :param r: rates determining the portion of old (`r`[0]), leader (`r`[1])
+            and random (`r`[2]) that are used to generate new candidates.
         :param correctness_weight: scalar representing the importance attached
-        to the correctness of the generated circuit.
+            to the correctness of the generated circuit.
         :param circuit_cost_weight: scalar representing the importance attached
-        to the cost of the generated circuit.
+            to the cost of the generated circuit.
         :param circuit_cost_func: a function that takes as input an instance of
-        QuantumGateSequence and returns a float representing the cost of the
-        given circuit.
-        :param parameters_bounds: bounds for the parameter of the quantum gates
-        in the basis. If None, this means that no quantum gate in the basis is
-        parametrised. If not all the quantum gates in the basis are
-        parametrised, the parameter bounds corresponding to non-parametrised
-        quantum gates can take any value.
+            :py:class:`~.QuantumCircuit` and returns a float representing the
+            cost of the given circuit.
+        :param parameters_bounds: a list of bounds for each operation in the
+            `basis`. A None value in this list means that the corresponding
+            operation is not parametrised. A None value for the whole list
+            (default value) means that no gate in `basis` is parametrised.
         """
         self._groups = [
-            gsg.GateSequenceGroup(basis, objective_unitary, length, population,
-                                  r, correctness_weight, circuit_cost_weight,
-                                  circuit_cost_func, parameters_bounds) for _ in
-            range(n)]
+            gsg.QuantumCircuitGroup(basis, objective_unitary, length,
+                                    population, r, correctness_weight,
+                                    circuit_cost_weight, circuit_cost_func,
+                                    parameters_bounds) for _ in range(n)]
         self._population = population
         self._length = length
         self._correctness_weight = correctness_weight
@@ -94,7 +96,8 @@ class GateSequencePopulation:
     def perform_one_way_crossover(self) -> None:
         """Apply the one way crossover step of the GLOA.
 
-        See the GLOA paper for more precision on this step.
+        See the `GLOA paper <https://arxiv.org/abs/1004.2242>`_ for more
+        precision on this step.
         """
         # One parameter per gate, length gates for each sequences, p sequences.
         number_of_parameters = self._length * self._population
@@ -105,7 +108,6 @@ class GateSequencePopulation:
             # Perform the cross-overs.
             for _ in range(crossover_number):
                 # Pick at random the indices.
-                other_group_index = numpy.random.randint(len(self._groups))
                 circuit_index = numpy.random.randint(self._population)
                 operation_index = numpy.random.randint(self._length)
                 # Create a new quantum gate sequence from the old one.
@@ -127,7 +129,7 @@ class GateSequencePopulation:
         return
 
     @staticmethod
-    def _get_parameters_from_group(group: gsg.GateSequenceGroup,
+    def _get_parameters_from_group(group: gsg.QuantumCircuitGroup,
                                    parameter_number: int) -> typing.Sequence[
         float]:
         circuits_ids = list(range(len(group.circuits)))

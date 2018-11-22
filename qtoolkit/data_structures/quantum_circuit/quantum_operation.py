@@ -42,7 +42,19 @@ import qtoolkit.utils.constants.matrices as mconsts
 
 
 class QuantumOperation:
-    """A class representing a quantum operation."""
+    """A class representing a quantum operation.
+
+    For the moment, the QuantumOperation class only support 1-qubit gates
+    with arbitrary controls. In the real world, this is not really a huge
+    limitation as most of the quantum hardware only supports 1-qubit gates
+    and one controlled operation like CX.
+
+    If any of the value of controls or the value of target are None, this
+    means that the operation is "abstract", i.e. it represent the general
+    operation, not applied to a particular case.
+    For example, QuantumOperation(X, None, [None, None]) represents the
+    doubly-controlled X operation.
+    """
 
     def __init__(self,
                  gate: typing.Union[gh.QuantumGate, gh.ParametrisedQuantumGate],
@@ -51,17 +63,6 @@ class QuantumOperation:
                  parameters: Optional[
                      typing.Sequence[Optional[float]]] = None) -> None:
         """Initialise the QuantumOperation instance.
-
-        For the moment, the QuantumOperation class only support 1-qubit gates
-        with arbitrary controls. In the real world, this is not really a huge
-        limitation as most of the quantum hardware only supports 1-qubit gates
-        and one controlled operation like CX.
-
-        If any of the value of controls or the value of target are None, this
-        means that the operation is "abstract", i.e. it represent the general
-        operation, not applied to a particular case.
-        For example, QuantumOperation(X, None, [None, None]) represents the
-        doubly-controlled X operation.
 
         :param gate: the 1-qubit quantum gate of the operation.
         :param target: the target qubit of the given quantum gate.
