@@ -95,9 +95,10 @@ class InverseRule(SimplificationRule):
     def is_simplifiable_from_last(self,
                                   quantum_circuit: qcirc.QuantumCircuit) -> \
         bool:
-        last = quantum_circuit.last
-        if last is None:
+        if quantum_circuit.size < 2:
             return False
+
+        last = quantum_circuit.last
         opgen = quantum_circuit.get_n_last_operations_on_qubit(2, last.target)
         op_names = [op.gate.name for op in opgen]
         if len(op_names) < 2:
@@ -116,9 +117,10 @@ class CXInverseRule(SimplificationRule):
     def is_simplifiable_from_last(self,
                                   quantum_circuit: qcirc.QuantumCircuit) -> \
         bool:
-        last = quantum_circuit.last
-        if last is None:
+        if quantum_circuit.size < 2:
             return False
+
+        last = quantum_circuit.last
         operations = list(
             quantum_circuit.get_n_last_operations_on_qubit(2, last.target))
         if len(operations) < 2:
@@ -145,9 +147,10 @@ class RepeatedRule(SimplificationRule):
     def is_simplifiable_from_last(self,
                                   quantum_circuit: qcirc.QuantumCircuit) -> \
         bool:
-        last = quantum_circuit.last
-        if last is None:
+        if quantum_circuit.size < self._repetition:
             return False
+
+        last = quantum_circuit.last
         opgen = quantum_circuit.get_n_last_operations_on_qubit(self._repetition,
                                                                last.target)
         op_names = [op.gate.name for op in opgen]

@@ -256,11 +256,11 @@ class QuantumCircuit:
         return self._graph.nodes[idx + self._qubit_number]['op']
 
     @property
-    def last(self):
-        if self._node_counter > self._qubit_number:
-            return self._graph.nodes[self._node_counter - 1]['op']
-        else:
-            return None
+    def last(self) -> qop.QuantumOperation:
+        if self._node_counter == self._qubit_number:
+            raise IndexError("Trying to recover the last operation of an "
+                             "empty QuantumCircuit.")
+        return self._graph.nodes[self._node_counter - 1]['op']
 
     @property
     def operations(self):
