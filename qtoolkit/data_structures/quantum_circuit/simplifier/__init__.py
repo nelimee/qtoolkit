@@ -1,5 +1,5 @@
 # ======================================================================
-# Copyright CERFACS (October 2018)
+# Copyright CERFACS (November 2018)
 # Contributor: Adrien Suau (adrien.suau@cerfacs.fr)
 #
 # This software is governed by the CeCILL-B license under French law and
@@ -29,33 +29,21 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-import typing
+"""Simplification detection and modification for :py:class:`~.QuantumCircuit`.
 
-import numpy.random
+This package aims at implementing reusable classes/methods to detect and
+"correct" simplifications in a :py:class:`~.QuantumCircuit`.
 
-import qtoolkit.utils.types as qtypes
-from qtoolkit.data_structures.quantum_gate_sequence import QuantumGateSequence
+Definitions:
+
+# In the whole package, a :py:class:`~.QuantumCircuit` is said to be
+  "simplifiable" if it admits at least one sub-sequence :math:`S` checking at
+  least one of the following points:
+
+  * The :py:class:`~.QuantumCircuit` represented by :math:`S` acts on a quantum
+    state as the identity matrix.
+  * The matrix :math:`M` representing :math:`S` represents also a shorter (in
+    terms of quantum gate number) sequence of quantum gates :math:`S'`.
 
 
-def generate_random_gate_sequence(
-    basis: typing.Sequence[qtypes.SUdMatrixGenerator], length: int,
-    parameters_bounds: typing.Optional[
-        numpy.ndarray] = None) -> QuantumGateSequence:
-    """Generate a random gate sequence.
-
-    :param basis: basis used to generate the sequence.
-    :param length: length of the random sequence generated.
-    :param parameters_bounds: bounds for the parameters. All the irrelevant
-    parameters can be set to any value and will not be accessed.
-    :return: a random quantum gate sequence.
-    """
-    sequence = numpy.random.randint(0, len(basis), size=length)
-    if parameters_bounds is not None:
-        a, b = parameters_bounds[0], parameters_bounds[1]
-        parameters = numpy.random.rand(length) * (b[sequence] - a[sequence]) + \
-                     a[sequence]
-
-    else:
-        parameters = None
-
-    return QuantumGateSequence(basis, sequence, parameters)
+"""

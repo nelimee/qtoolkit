@@ -31,6 +31,7 @@
 
 import inspect
 import sys
+import typing
 from collections import Set, Mapping, deque
 from numbers import Number
 
@@ -38,7 +39,7 @@ zero_depth_bases = (str, bytes, Number, range, bytearray)
 iteritems = 'items'
 
 
-def getsize(obj_0):
+def getsize(obj_0: typing.Any) -> int:
     """Recursively iterate to sum size of object & members.
 
     Copied from https://stackoverflow.com/a/30316760/4810787.
@@ -74,7 +75,7 @@ def getsize(obj_0):
     return inner(obj_0)
 
 
-def first_level_sizes_report(obj_0, _seen_ids: set = None) -> dict:
+def first_level_sizes_report(obj_0: typing.Any, _seen_ids: set = None) -> dict:
     """Compute the sizes of the first-level members.
 
     First-level members are the entries of obj_0.__dict__. The printed report
@@ -141,6 +142,11 @@ def list_first_level_size_report(obj_list, _seen_ids: set = None):
 
 
 def byte_number_to_human_format(byte_number: int) -> str:
+    """Transform a byte number to a human-readable format (1024 -> 1Kio).
+
+    :param byte_number: The number of bytes.
+    :return: The human-readable version.
+    """
     bin_prefix = ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
     current_bin_prefix = 0
     while byte_number > 1024:
@@ -149,20 +155,33 @@ def byte_number_to_human_format(byte_number: int) -> str:
     return f"{byte_number:.4g}" + " " + bin_prefix[current_bin_prefix] + "B"
 
 
-def print_size_report(report: dict) -> None:
-    sorted_sizes = sorted([(v, k) for k, v in report.items()])
+def size_report(raw_size_report: dict) -> str:
+    """Construct a report
+
+    :param raw_size_report: The size report returned by the methods in this
+        module.
+    :return: a human-readable report as a string.
+    """
+    sorted_sizes = sorted([(v, k) for k, v in raw_size_report.items()])
     max_key_len = max(map(lambda x: len(str(x[1])), sorted_sizes))
 
+    report = ""
     format_string = "{0:<" + str(max_key_len) + "}: {1}"
     total_size = 0
     for size, key in sorted_sizes:
-        print(format_string.format(key, byte_number_to_human_format(size)))
+        report += format_string.format(key, byte_number_to_human_format(size))
         total_size += size
-    print(
-        format_string.format("TOTAL", byte_number_to_human_format(total_size)))
+    report += format_string.format("TOTAL",
+                                   byte_number_to_human_format(total_size))
+    return report
 
 
-def merge_reports(reports) -> dict:
+def merge_reports(reports: typing.Iterable[dict]) -> dict:
+    """Merge the size reports in reports.
+
+    :param reports: The reports to merge.
+    :return: the merged report.
+    """
     final_report = dict()
     for report in reports:
         for k, v in report.items():

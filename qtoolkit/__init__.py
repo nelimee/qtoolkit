@@ -28,34 +28,3 @@
 # The fact that you  are presently reading this  means that you have had
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
-
-import typing
-
-from qtoolkit.data_structures.quantum_circuit.quantum_circuit import \
-    QuantumCircuit
-from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
-    import \
-    SimplificationRule
-
-
-class GateSequenceSimplifier:
-
-    def __init__(self,
-                 simplifications: typing.List[SimplificationRule]) -> None:
-        self._rules = simplifications
-
-    def add_rule(self, rule: SimplificationRule) -> None:
-        self._rules.append(rule)
-
-    def is_simplifiable(self, quantum_circuit: QuantumCircuit) -> bool:
-        for rule in self._rules:
-            if rule.is_simplifiable(quantum_circuit):
-                return True
-        return False
-
-    def is_simplifiable_from_last(self,
-                                  quantum_circuit: QuantumCircuit) -> bool:
-        for rule in self._rules:
-            if rule.is_simplifiable_from_last(quantum_circuit):
-                return True
-        return False

@@ -42,7 +42,6 @@ import qtoolkit.utils.constants.matrices as mconsts
 
 
 class QuantumOperation:
-    """A class representing a quantum operation."""
 
     def __init__(self,
                  gate: typing.Union[gh.QuantumGate, gh.ParametrisedQuantumGate],
@@ -50,7 +49,7 @@ class QuantumOperation:
                  controls: Optional[typing.Sequence[Optional[int]]] = None,
                  parameters: Optional[
                      typing.Sequence[Optional[float]]] = None) -> None:
-        """Initialise the QuantumOperation instance.
+        """A class representing a quantum operation.
 
         For the moment, the QuantumOperation class only support 1-qubit gates
         with arbitrary controls. In the real world, this is not really a huge
@@ -65,13 +64,12 @@ class QuantumOperation:
 
         :param gate: the 1-qubit quantum gate of the operation.
         :param target: the target qubit of the given quantum gate.
-        :param controls: an arbitrary number of control qubits. If the controls
-        parameter is None, this means that the gate is not controlled by any
-        qubit.
+        :param controls: an arbitrary number of control qubits. If `controls`
+            is None, this means that the gate is not controlled by any qubit.
         :param parameters: parameters of the given gate. A value of None can
-        means 2 things: if the provided gate is a ParametrisedQuantumGate, it
-        means that the operation represents the "abstract" operation, else, it
-        is just a reminder that the stored gate is not parametrised.
+            mean 2 things: if the provided gate is a ParametrisedQuantumGate,
+            then the operation represents an "abstract" operation, else it
+            is just a reminder that the stored gate is not parametrised.
         """
         if controls is None:
             controls = list()
@@ -106,30 +104,34 @@ class QuantumOperation:
 
     @target.setter
     def target(self, value: int) -> None:
+        """Setter for the target qubit."""
         assert value not in self._controls
         self._target = value
 
     @controls.setter
     def controls(self, value: typing.Iterable[int]) -> None:
+        """Setter for the control qubits."""
         assert self.target not in value
         self._controls = list(value)
 
     @property
     def parameters(self) -> Optional[numpy.ndarray]:
+        """Getter for the parameters of the quantum operations."""
         if self._parameters is not None:
             return numpy.array(self._parameters)
         return self._parameters
 
     @parameters.setter
     def parameters(self, value: numpy.ndarray) -> None:
+        """Setter for the parameters of the quantum operations."""
         self._parameters = value
 
     def matrix(self, qubit_number: int) -> numpy.ndarray:
         """Computes the matrix representation of the operation.
 
         :param qubit_number: the number of qubits of the overall circuit.
-        :return: a 2**qubit_number x 2**qubit_number matrix representing the
-        current operation.
+        :return: a (2**qubit_number, 2**qubit_number) matrix representing the
+            current operation.
         """
         # If the operation is not a controlled by any qubit then we can
         # simplify greatly the algorithm.
@@ -187,29 +189,59 @@ class QuantumOperation:
         return ret
 
     def inverse_inplace(self) -> 'QuantumOperation':
-        # TODO: H property may not be defined if self._gate is a
-        # ParametrisedQuantumGate
+        """Inverse the quantum operation *in place*.
+
+        :return: the modified quantum operation.
+
+        .. warning:: This method does not work correctly for parametrised
+           operations!
+        """
         self._gate = self._gate.H
         return self
 
     def inverse(self) -> 'QuantumOperation':
+        """Copy and inverse the copied quantum operation.
+
+        The current instance is not modified.
+
+        :return: the inverse of the current instance.
+
+        .. warning:: This method does not work correctly for parametrised
+           operations!
+        """
         cpy = copy.copy(self)
         return cpy.inverse_inplace()
 
     @property
-    def H(self):
+    def H(self) -> 'QuantumOperation':
+        """Copy and inverse the copied quantum operation.
+
+        The current instance is not modified.
+
+        :return: the inverse of the current instance.
+
+        .. warning:: This method does not work correctly for parametrised
+           operations!
+        """
         return self.inverse()
 
-    def is_parametrised(self):
+    def is_parametrised(self) -> bool:
+        """Tells whether or not the quantum operation is parametrised.
+
+        :return: True if the instance is a parametrised quantum operation, else
+            False.
+        """
         return callable(self._gate)
 
-    def __call__(self, *args, **kwargs) -> 'QuantumOperation':
+    def __call__(self, *args: float, **kwargs) -> 'QuantumOperation':
+        """Parametrise the quantum operation.
+
+        :param args: The parameter(s) of the quantum operation we want to
+            create.
+        :param kwargs: Additional parameters forwarded to the internal
+            :py:class:`~.QuantumGate` **but** not saved as gate parameters.
+        :return: a new non-parametrised quantum operation.
+        :raise TypeError: if not self._is_parametrised().
+        """
         return QuantumOperation(self._gate(*args, **kwargs), self.target,
                                 self.controls, args)
-
-
-def control(operation: QuantumOperation, *controls: int) -> QuantumOperation:
-    assert operation.target not in controls, "The target qubit cannot be used" \
-                                             " as a control qubit."
-    return QuantumOperation(operation.gate, operation.target,
-                            tuple(set(operation.controls) | set(controls)))

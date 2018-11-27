@@ -29,7 +29,14 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Implement the gate hierarchy used by the QuantumCircuit class."""
+"""Implementation of the gate hierarchy used by the QuantumCircuit class.
+
+This module implements classes used to represent 1-qubit gates (parametrised or
+not).
+
+.. note::
+    For n-qubit (:math:`n > 1`) gates see :py:class:`~.QuantumOperation`.
+"""
 
 import typing
 
@@ -49,17 +56,13 @@ class QuantumInstruction:
         self._name = name
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Getter for the instruction name."""
         return self._name
 
 
 class ParametrisedQuantumGate(QuantumInstruction):
-    """Class representing a parametrised quantum gate.
-
-    For the moment, "parameters" means "one floating-point value". Further
-    implementation may improve this to arbitrary parameters.
-    """
+    """Class representing a parametrised quantum gate."""
 
     def __init__(self, name: str,
                  matrix_generator: qtypes.UnitaryMatrixGenerator,
@@ -69,9 +72,11 @@ class ParametrisedQuantumGate(QuantumInstruction):
 
         :param name: the name of the quantum gate.
         :param matrix_generator: a callable that will generate a unitary matrix
-        from a single floating-point value.
-        :param inverse: a callable that will be called when trying to inverse
-        a QuantumGate. See QuantumGate.inverse for more information.
+            from a numpy.ndarray of floating-point value(s).
+        :param inverse: a callable that will be forwarded to the
+            :py:class:`~.QuantumGate` constructed from this
+            :py:class:`~.ParametrisedQuantumGate`. See
+            :py:meth:`.QuantumGate.inverse` for more information.
         """
         super().__init__(name)
         self._matrix_generator = matrix_generator
@@ -80,11 +85,12 @@ class ParametrisedQuantumGate(QuantumInstruction):
     def __call__(self, *args: float, **kwargs) -> 'QuantumGate':
         """Generate the quantum gate obtained with the given parameters.
 
-        :param args: the parameters forwarded to the matrix_generator callable.
-        :param kwargs: additional data forwarded to the matrix_generator
-        callable.
-        :return: a QuantumGate corresponding to the current parametrised
-        quantum gate with the given parameters.
+        :param args: the parameters forwarded to the `matrix_generator`
+            callable.
+        :param kwargs: additional data forwarded to the `matrix_generator`
+            callable.
+        :return: a :py:class:`~.QuantumGate` corresponding to the current
+        parametrised quantum gate with the given parameters.
         """
         params = numpy.array(args)
         return QuantumGate(self.name, self._matrix_generator(params, **kwargs),
@@ -97,14 +103,14 @@ class QuantumGate(QuantumInstruction):
     def __init__(self, name: str, matrix: qtypes.UnitaryMatrix,
                  inverse: typing.Callable[['QuantumGate'], 'QuantumGate'],
                  parameters: typing.Optional[numpy.ndarray] = None) -> None:
-        """Initialise the QuantumGate instance.
+        """Initialise the :py:class:`~.QuantumGate` instance.
 
         :param name: name of the quantum gate.
         :param matrix: unitary matrix representing the quantum gate.
         :param inverse: callable used to inverse the current quantum gate.
         :param parameters: the set of parameters used to generate the current
-        quantum gate. If the current quantum gate was not generated from a
-        ParametrisedQuantumGate, this value is empty.
+            quantum gate. If the current quantum gate was not generated from a
+            :py:class:`~.ParametrisedQuantumGate`, this value is empty.
         """
         super().__init__(name)
         self._matrix = matrix

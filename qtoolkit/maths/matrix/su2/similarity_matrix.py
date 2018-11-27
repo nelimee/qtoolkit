@@ -37,11 +37,11 @@ import qtoolkit.utils.types as qtypes
 
 def similarity_matrix(A: qtypes.SU2Matrix,
                       B: qtypes.SU2Matrix) -> qtypes.SU2Matrix:
-    """Find S in SU(2) such that A = S @ B @ S.T.conj().
+    """Find :math:`S \\in SU(2) \\mid A = S B S^\\dagger`.
 
-    :param A: First SU(2) matrix.
-    :param B: Second SU(2) matrix.
-    :return: The SU(2) matrix S.
+    :param A: First :math:`SU(2)` matrix.
+    :param B: Second :math:`SU(2)` matrix.
+    :return: the :math:`SU(2)` matrix :math:`S`.
     """
     a, b = su2trans.su2_to_so3(A), su2trans.su2_to_so3(B)
     norm_a, norm_b = numpy.linalg.norm(a, 2), numpy.linalg.norm(b, 2)

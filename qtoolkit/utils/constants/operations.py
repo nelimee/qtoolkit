@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Frequently used quantum operations."""
+
 import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 import qtoolkit.utils.constants.quantum_gates as qgconsts
 

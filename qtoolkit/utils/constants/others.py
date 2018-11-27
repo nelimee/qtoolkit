@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Other constants."""
+
 import os.path
 
 # Test-related constants

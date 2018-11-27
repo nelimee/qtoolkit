@@ -1,8 +1,0 @@
-sympy
-qiskit
-numpy
-scipy
-sklearn
-matplotlib
-networkx
-annoy

@@ -39,14 +39,14 @@ import qtoolkit.utils.types as qtypes
 
 
 def fowler_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
-    """Computes the Fowler distance between A and B.
+    """Computes the Fowler distance between :math:`A` and :math:`B`.
 
-    The Fowler distance is a distance that does not depend on the relative phase
-    between the 2 matrices.
+    The Fowler distance is implemented in `Paul Pham's skc-python repository \
+    <https://github.com/cryptogoth/skc-python/blob/master/skc/group_factor.py#L75>`_.
 
     :param A: First matrix.
     :param B: Second matrix.
-    :return: The Fowler distance between A and B.
+    :return: the Fowler distance between :math:`A` and :math:`B`.
     """
     dimension = A.shape[0]
     product = A.T.conj() @ B
@@ -56,20 +56,26 @@ def fowler_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
 
 def fowler_distances(A: numpy.ndarray,
                      B: qtypes.UnitaryMatrix) -> numpy.ndarray:
-    """Computes the Fowler distances between each A[i] and B.
+    """Computes the Fowler distances between each :math:`A[i]` and :math:`B`.
 
     This method is an optimised version of
+
+    .. highlight:: python
+    .. code-block:: python
+
         N = A.shape[0]
         distances = []
         for i in range(N):
             distances.append(fowler_distance(A[i], B))
         return numpy.array(distances)
 
-    :param A: a 3-dimensional array of dimensions (N, m, m) with N the number
-    of unitary matrices of size (m, m) to process.
-    :param B: a unitary matrix of size (m, m).
-    :return: a 1-dimensional array of size N containing the fowler distances
-    between A[i] and B for 0 <= i < N.
+    :param A: a 3-dimensional array of dimensions (:math:`N`, :math:`m`,
+        :math:`m`) with :math:`N` the number of unitary matrices of size
+        (:math:`m`, :math:`m`) to process.
+    :param B: a unitary matrix of size (:math:`m`, :math:`m`).
+    :return: a 1-dimensional array of size :math:`N` containing the fowler
+        distances between :math:`A[i]` and :math:`B` for
+        :math:`0 \\leqslant i < N`.
     """
     dimension = B.shape[0]
     products = numpy.transpose(A, axes=(0, 2, 1)).conj() @ B
@@ -79,11 +85,11 @@ def fowler_distances(A: numpy.ndarray,
 
 
 def trace_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
-    """Computes the trace distance between A and B.
+    """Computes the trace distance between :math:`A` and :math:`B`.
 
     :param A: First matrix.
     :param B: Second matrix.
-    :return: The trace distance between A and B.
+    :return: the trace distance between :math:`A` and :math:`B`.
     """
     difference = A - B
     eigs = numpy.linalg.eigvals(difference @ difference.T.conj())
@@ -91,19 +97,21 @@ def trace_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
 
 
 def operator_norm(U: qtypes.UnitaryMatrix) -> float:
-    """Operator norm of a unitary matrix U.
+    """Operator norm of a unitary matrix :math:`U`.
 
-    ||U||_{op} = sup {||Uv|| : ||v||=1}
+    .. math::
+
+        ||U||_{op} = \\sup_{||v||=1} \\left\\{||Uv||\\right\\}
 
     :param U: A unitary matrix.
-    :return: The operator norm of U.
+    :return: the operator norm of :math:`U`.
     """
     eigenvalues = scipy.linalg.eigvals(U)
     return numpy.max(numpy.abs(eigenvalues))
 
 
 def gloa_objective_function(gate_sequence: qcirc.QuantumCircuit,
-                            objective_unitary: qtypes.UnitaryMatrix,
+                            U: qtypes.UnitaryMatrix,
                             correctness_weight: float,
                             circuit_cost_weight: float,
                             circuit_cost_func: qcirc.CircuitCostFunction) -> \
@@ -111,27 +119,27 @@ def gloa_objective_function(gate_sequence: qcirc.QuantumCircuit,
     """Compute a modified GLOA objective function.
 
     The GLOA article is: https://arxiv.org/abs/1004.2242.
+
     This objective function has been modified because the one presented in the
-    GLOA article may make the algorithm converge to a matrix M such that
-    objective_unitary @ M.T.conj() = - Id. This new objective function
-    prevent this problem.
+    GLOA article may make the algorithm converge to a matrix :math:`M` such that
+    :math:`U  M^\\dagger = - I_n`. This new objective function prevent this
+    problem.
 
     :param gate_sequence: the sequence of quantum gate that is candidate to
-    approximate the objective_unitary matrix.
-    :param objective_unitary: the unitary matrix we are searching an
-    approximation for.
+        approximate the objective_unitary matrix.
+    :param U: the unitary matrix we are searching an approximation for.
     :param correctness_weight: importance of the correctness of the circuit
-    in the objective function. Corresponds to the parameter alpha in the
-    original paper.
+        in the objective function. Corresponds to the parameter alpha in the
+        original paper.
     :param circuit_cost_weight: importance of the circuit cost in the
-    objective function. Corresponds to the parameter beta in the original
-    paper.
+        objective function. Corresponds to the parameter beta in the original
+        paper.
     :param circuit_cost_func: a function that will associate a cost to a given
-    sequence of quantum gates.
+        sequence of quantum gates.
     :return: the fidelity of the approximation.
     """
-    N = objective_unitary.shape[0]
-    UUT = objective_unitary @ gate_sequence.matrix.T.conj()
+    N = U.shape[0]
+    UUT = U @ gate_sequence.matrix.T.conj()
     trace_fidelity = (1 + numpy.trace(UUT) / N) / 2
     correctness = correctness_weight * trace_fidelity
     circuit_cost = circuit_cost_weight / circuit_cost_func(gate_sequence)

@@ -29,7 +29,7 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Transformations related to SU(2) matrices."""
+"""Transformations related to :math:`SU(2)` matrices."""
 
 import numpy
 
@@ -37,25 +37,29 @@ import qtoolkit.utils.constants.matrices as mconsts
 import qtoolkit.utils.types as qtypes
 
 
-def su2_to_so3(unitary: qtypes.SU2Matrix) -> qtypes.SO3Vector:
-    r"""Convert a SU(2) matrix into x in e^{-ix.sigma/2}.
+def su2_to_so3(U: qtypes.SU2Matrix) -> qtypes.SO3Vector:
+    """Return :math:`x` such that :math:`U = e^{-ix.\\sigma/2}`.
 
-    This function is based on the formula:
-    $$e^{ia (\hat{n} \dot \vec{\sigma})} =
-    \cos(a) I + i(\hat{n} \dot \vec{\sigma}) \sin(a)$$
-    from https://en.wikipedia.org/wiki/Pauli_matrices
+    This function is based on the formula
 
-    :param unitary: The SU(2) matrix to convert.
+    .. math::
+
+        e^{ia (\\hat{n} \\dot{} \\vec{\\sigma})} = \\cos(a) I + i(\\hat{n}
+        \\dot{} \\vec{\\sigma}) \\sin(a)
+
+    from https://en.wikipedia.org/wiki/Pauli_matrices.
+
+    :param U: The :math:`SU(2)` matrix to convert.
     :return: 3 real numbers parametrising entirely the given matrix.
     """
     # The coefficients are: $[-\sin(a) n_1, -\sin(a) n_2, -\sin(a) n_3]$.
     # The minus appears because there is a minus in the exponential we
     # convert to, which is not present in the formula given in the link.
     coefficients = numpy.array(
-        [-numpy.imag(unitary[0, 1]), numpy.real(unitary[1, 0]),
-         numpy.imag((unitary[1, 1] - unitary[0, 0]) / 2.0)])
+        [-numpy.imag(U[0, 1]), numpy.real(U[1, 0]),
+         numpy.imag((U[1, 1] - U[0, 0]) / 2.0)])
 
-    cos_theta_2 = numpy.real((unitary[0, 0] + unitary[1, 1]) / 2.0)
+    cos_theta_2 = numpy.real((U[0, 0] + U[1, 1]) / 2.0)
     # The vector $\hat{n}$ is supposed to be of unit-length so its norm
     # is 1. That is why the expression below gives the sinus.
     sin_theta_2 = numpy.linalg.norm(coefficients, 2)
@@ -71,15 +75,19 @@ def su2_to_so3(unitary: qtypes.SU2Matrix) -> qtypes.SO3Vector:
 
 
 def so3_to_su2(coefficients: qtypes.SO3Vector) -> qtypes.SU2Matrix:
-    r"""Convert a set of 3 real coefficients to a unique SU(2) matrix.
+    """Convert a set of 3 real coefficients to a unique :math:`SU(2)` matrix.
 
     Computes the unitary matrix in SU(2) with the formula
-    $$e^{ia (\hat{n} \dot \vec{\sigma})} =
-    \cos(a) I + i(\hat{n} \dot \vec{\sigma}) \sin(a)$$
-    from https://en.wikipedia.org/wiki/Pauli_matrices
 
-    :param coefficients: 3 real numbers characterising the SU(2) matrix.
-    :return: The SU(2) matrix characterised by the given coefficients.
+    .. math::
+
+        e^{ia (\\hat{n} \\dot{} \\vec{\\sigma})} = \\cos(a) I + i(\\hat{n}
+        \\dot{} \\vec{\\sigma}) \\sin(a)
+
+    from https://en.wikipedia.org/wiki/Pauli_matrices.
+
+    :param coefficients: 3 real numbers characterising the :math:`SU(2)` matrix.
+    :return: the :math:`SU(2)` matrix characterised by the given coefficients.
     """
     theta = numpy.linalg.norm(coefficients, 2)
     identity = numpy.identity(2)
@@ -97,17 +105,21 @@ def so3_to_su2(coefficients: qtypes.SO3Vector) -> qtypes.SU2Matrix:
 
 
 def su2_to_H(unitary: qtypes.SU2Matrix) -> numpy.ndarray:
-    """Convert a SU(2) matrix to a unit-norm quaternion.
+    """Convert a :math:`SU(2)` matrix to a unit-norm quaternion.
 
     Quaternions are composed of 4 real numbers. These numbers corresponds to
-    the coefficients $\alpha_i$ in the equation
-    $$e^{ia (\hat{n} \dot \vec{\sigma})} =
-    \alpha_0 I + i(\hat{\alpha} \dot \vec{\sigma})$$
-    from https://en.wikipedia.org/wiki/Pauli_matrices
+    the coefficients :math:`\\alpha_i` in the equation
+
+    .. math::
+
+        e^{ia (\\hat{n} \\dot{} \\vec{\\sigma})} = \\cos(a) I + i(\\hat{n}
+        \\dot{} \\vec{\\sigma}) \\sin(a)
+
+    from https://en.wikipedia.org/wiki/Pauli_matrices.
 
     :param unitary: The unitary matrix to decompose.
-    :return: The 4 real coefficients of the unit-norm quaternion representing
-    the matrix.
+    :return: the 4 real coefficients of the unit-norm quaternion representing
+        the matrix.
     """
     coefficients = numpy.array(
         [numpy.real(unitary[0, 0]), -numpy.imag(unitary[0, 1]),
@@ -116,16 +128,21 @@ def su2_to_H(unitary: qtypes.SU2Matrix) -> numpy.ndarray:
 
 
 def H_to_su2(coefficients: numpy.ndarray) -> qtypes.SU2Matrix:
-    """Convert a unit-norm quaternion to a SU(2) matrix.
+    """Convert a unit-norm quaternion to a :math:`SU(2)` matrix.
 
     Quaternions are composed of 4 real numbers. These numbers corresponds to
-    the coefficients $\alpha_i$ in the equation
-    $$e^{ia (\hat{n} \dot \vec{\sigma})} =
-    \alpha_0 I + i(\hat{\alpha} \dot \vec{\sigma})$$
-    from https://en.wikipedia.org/wiki/Pauli_matrices
+    the coefficients :math:`\\alpha_i` in the equation
 
-    :param coefficients: The coefficients characterising the SU(2) matrix.
-    :return: The SU(2) matrix corresponding to the given coefficients.
+    .. math::
+
+        e^{ia (\\hat{n} \\dot{} \\vec{\\sigma})} = \\cos(a) I + i(\\hat{n}
+        \\dot{} \\vec{\\sigma}) \\sin(a)
+
+    from https://en.wikipedia.org/wiki/Pauli_matrices.
+
+    :param coefficients: The coefficients characterising the :math:`SU(2)`
+        matrix.
+    :return: the :math:`SU(2)` matrix corresponding to the given coefficients.
     """
     return coefficients[0] * mconsts.ID2 - 1.j * (
         coefficients[1] * mconsts.P_X + coefficients[2] * mconsts.P_Y +
@@ -133,13 +150,13 @@ def H_to_su2(coefficients: numpy.ndarray) -> qtypes.SU2Matrix:
 
 
 def unitary_to_su2(unitary: qtypes.UnitaryMatrix) -> qtypes.SU2Matrix:
-    """Project the given unitary matrix in SU(2).
+    """Project the given unitary matrix in :math:`U(2)` to :math:`SU(2)`.
 
     This routine just scales the given unitary to make its determinant equals to
     1.
 
-    :param unitary: The unitary matrix to project.
-    :return: The corresponding SU(2) matrix.
+    :param unitary: The unitary matrix in :math:`U(2)` to project.
+    :return: the corresponding :math:`SU(2)` matrix.
     """
     det = unitary[0, 0] * unitary[1, 1] - unitary[0, 1] * unitary[1, 0]
     return unitary / numpy.lib.scimath.sqrt(det)

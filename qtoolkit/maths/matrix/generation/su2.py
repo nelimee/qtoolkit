@@ -29,7 +29,7 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""A set of functions to generate SU(2) matrices."""
+"""A set of functions to generate :math:`SU(2)` matrices."""
 
 import numpy
 
@@ -38,21 +38,23 @@ import qtoolkit.utils.types as qtypes
 
 
 def generate_random_SU2_matrix() -> qtypes.SU2Matrix:
-    """Generate a random matrix in SU(2).
+    """Generate a random matrix in :math:`SU(2)`.
 
-    :return: A matrix in SU(2)
+    :return: a matrix in :math:`SU(2)`.
     """
     alpha, beta = rand.generate_random_normalised_complexes(2)
     return generate_SU2_matrix(alpha, beta)
 
 
 def generate_SU2_matrix(alpha: complex, beta: complex) -> qtypes.SU2Matrix:
-    """Generate the matrix [[alpha, -conj(beta)], [beta, conj(alpha)]].
+    """Generate the matrix :math:`\\begin{pmatrix}\\alpha & \
+    -\\overline{\\beta}\\\\ \\beta & \\overline{\\alpha}\\end{pmatrix}`.
 
-    The following condition needs to be verified: |alpha|^2 + |beta|^2 = 1.
+    The following condition needs to be verified:
+    :math:`|\\alpha|^2 + |\\beta|^2 = 1`
 
     :param alpha: A complex number.
     :param beta: A complex number.
-    :return: A SU2 matrix.
+    :return: a :math:`SU(2)` matrix.
     """
     return numpy.array([[alpha, -numpy.conj(beta)], [beta, numpy.conj(alpha)]])
