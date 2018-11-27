@@ -1,6 +1,6 @@
 # Project-specific ignore rules
 qtoolkit/data
-docs/source
+docs/api
 
 # Created by .ignore support plugin (hsz.mobi)
 ### JetBrains template
