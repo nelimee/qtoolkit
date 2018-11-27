@@ -183,7 +183,8 @@ setup(  # This is the name of your project. The first time you publish this
     extras_require={  # Optional
         'dev' : ['check-manifest'],
         'test': ['coverage'],
-        'docs': ['sphinx-rtd-theme', 'sphinx-autodoc-typehints'],
+        'docs': ['sphinx-rtd-theme', 'sphinx-autodoc-typehints',
+                 'sphinxcontrib-apidoc'],
     },
 
     # If there are data files included in your packages that need to be

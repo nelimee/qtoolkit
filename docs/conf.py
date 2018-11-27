@@ -40,7 +40,8 @@ release = ''
 # ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.coverage',
               'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
-              'sphinx.ext.githubpages', 'sphinx_autodoc_typehints', ]
+              'sphinx.ext.githubpages', 'sphinx_autodoc_typehints',
+              'sphinxcontrib.apidoc', ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -92,6 +93,31 @@ add_module_names = False
 # - "init":
 #     Only the __init__ method’s docstring is inserted.
 autoclass_content = 'init'
+
+# Options for sphinxcontrib.apidoc
+# The path to the module to document. This must be a path to a Python package.
+# This path can be a path relative to the documentation source directory or an
+# absolute path.
+# Required.
+apidoc_module_dir = "../qtoolkit"
+
+# The output directory. If it does not exist, it is created. This path is
+# relative to the documentation source directory.
+# Optional. Default to "api".
+apidoc_output_dir = "api"
+
+# Put documentation for each module on its own page. Otherwise there will be one
+# page per (sub)package.
+# Optional. Default to False.
+apidoc_separate_modules = False
+
+# When set to True, put module documentation before submodule documentation.
+# Optional. Default to False.
+apidoc_module_first = True
+
+# Extra arguments which will be passed to sphinx-apidoc. These are placed after
+# flags and before the module name.
+#apidoc_extra_args = ["--maxdepth 10"]
 
 
 # -- Options for HTML output -------------------------------------------------

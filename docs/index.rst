@@ -6,7 +6,7 @@ Welcome to qtoolkit's documentation!
    :caption: Contents:
 
    readme
-   source/modules
+   api/modules
 
 Indices and tables
 ==================
