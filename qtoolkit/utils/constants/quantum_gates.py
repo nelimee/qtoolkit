@@ -29,6 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
+"""Frequently used quantum gates."""
+
 import qtoolkit.data_structures.quantum_circuit.gate_hierarchy as qgates
 import qtoolkit.utils.constants.matrices as mconsts
 

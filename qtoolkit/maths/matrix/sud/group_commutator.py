@@ -29,20 +29,28 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Implementation of the group_commutator decomposition for SU(d) matrices."""
+"""Implementation of the group_commutator for :math:`SU(d)` matrices."""
 
 import typing
 
 import numpy
-import scipy
 
-import qtoolkit.maths.matrix.distances as qdists
 import qtoolkit.maths.matrix.su2.group_commutator as gc_su2
 import qtoolkit.utils.types as qtypes
 
 
 def group_commutator(U: qtypes.SUdMatrix) -> typing.Tuple[
     qtypes.SUdMatrix, qtypes.SUdMatrix]:
+    """Finds :math:`V, W \\in U(d) \\mid U = V W V^\\dagger W^\\dagger`.
+
+    .. note::
+       The implementation of this method is based on `this implementation by
+       Paul Pham \
+       <https://github.com/cryptogoth/skc-python/blob/master/skc/group_factor.py#L75>`.
+
+    :param U: The unitary matrix in :math:`U(d)` to decompose.
+    :return: a tuple containing (:math:`V`, :math:`W`).
+    """
     dim = U.shape[0]
 
     # We diagonalise the matrix.

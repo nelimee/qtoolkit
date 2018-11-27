@@ -49,7 +49,7 @@ def generate_random_normalised_complexes(size: int) -> numpy.ndarray:
     """Generate size complex numbers as a normalised vector.
 
     :param size: A positive integer.
-    :return: A normalised list of size random complex numbers.
+    :return: a normalised list of size random complex numbers.
     """
     complexes = numpy.random.rand(size) + 1.j * numpy.random.rand(size)
     return complexes / numpy.linalg.norm(complexes)

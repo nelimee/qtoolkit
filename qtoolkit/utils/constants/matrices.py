@@ -29,17 +29,19 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Declaring some useful constants for computations."""
+"""Frequent matrices in quantum computing.
+
+This file contains several matrices that are frequently used in quantum
+computing.
+"""
 
 import numpy
 
 import qtoolkit.utils.types as qtypes
 
-# Test-related constants
-USE_RANDOM_TESTS = True
-RANDOM_SAMPLES = 100
-
-# Pauli matrices
+######################################
+#           PAULI MATRICES           #
+######################################
 # Definitions with sigma
 SIGMA_X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
 SIGMA_Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
@@ -55,14 +57,20 @@ P_X_SU2 = SIGMA_X_SU2
 P_Y_SU2 = SIGMA_Y_SU2
 P_Z_SU2 = SIGMA_Z_SU2
 
-# Other matrices
+
+######################################
+#           IDENTITY MATRIX          #
+######################################
 IDENTITY_2X2 = numpy.identity(2, dtype=numpy.complex)
 ID2 = IDENTITY_2X2
 # In SU(2)
 IDENTITY_2X2_SU2 = IDENTITY_2X2
 ID2_SU2 = ID2
 
-# Quantum gates constants
+
+######################################
+#       QUANTUM GATES MATRICES       #
+######################################
 X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
 Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
 Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)

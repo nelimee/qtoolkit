@@ -38,38 +38,42 @@ import qtoolkit.maths.random as rand
 import qtoolkit.utils.types as qtypes
 
 
-def generate_random_unitary_matrix(dimension: int = 2) -> qtypes.UnitaryMatrix:
-    """Generate a random unitary matrix.
+def generate_random_unitary_matrix(d: int = 2) -> qtypes.UnitaryMatrix:
+    """Generate a random unitary matrix in :math:`U(d)`.
 
-    :return: A unitary matrix.
+    :param d: Dimension of the generated matrix.
+    :return: a :math:`U(d)` matrix.
     """
     determinant = rand.generate_random_complex(amplitude=1)
-    return determinant * gen_sud.generate_random_SUd(dimension)
+    return determinant * gen_sud.generate_random_SUd(d)
 
 
 def generate_unitary_matrix(alpha: complex, beta: complex,
                             e_iphi: complex) -> qtypes.UnitaryMatrix:
-    """Generate the matrix [[alpha, beta], [-e_iphi*conj(beta), e_iphi*conj(
-    alpha)]].
+    """Generate the matrix :math:`\\begin{pmatrix}\\alpha &\\beta \\\\ \
+    -e^{i\\phi \\overline{\\beta}}& e^{i\\phi \\overline{\\alpha}}\
+    \\end{pmatrix}`.
 
-    The following conditions needs to be verified:
-     1. |alpha|^2 + |beta|^2 = 1
-     2. |e_iphi| = 1
+    .. note:: The following conditions needs to be verified:
+
+        1. :math:`|\\alpha|^2 + |\\beta|^2 = 1`
+        2. :math:`|e^{i\\phi}| = 1`
 
     :param alpha: A complex number.
     :param beta: A complex number.
-    :param e_iphi: A complex number of the unitary circle.
-    :return: A unitary matrix.
+    :param e_iphi: A complex number on the unitary circle.
+    :return: a unitary matrix in :math:`U(2)`.
     """
     return numpy.array([[alpha, beta], [-e_iphi * numpy.conj(beta),
                                         e_iphi * numpy.conj(alpha)]])
 
 
 def coefficients_to_unitary(coefficients: numpy.ndarray,
-                            determinant: complex) -> qtypes.UnitaryMatrix:
+                            determinant: complex = 1) -> qtypes.UnitaryMatrix:
     """Generate the unitary matrix associated with the given coefficients.
 
-    :param coefficients: a vector of 2*(d**2) real numbers in [0, 1).
+    :param coefficients: a vector of :math:`2d^2` real numbers in
+        :math:`[0, 1)`.
     :param determinant: determinant of the generated matrix.
     :return: a unitary matrix with the provided determinant.
     """

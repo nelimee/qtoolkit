@@ -39,9 +39,9 @@ def time_single_execution(function_name: str):
     """Parametrised decorator to time each execution of the decorated function.
 
     :param function_name: name of the decorated function. This name is printed
-    alongside the execution time of the function.
+        alongside the execution time of the function.
     :return: A decorator that will print the execution time of the decorated
-    callable after each call of this callable.
+        callable after each call of this callable.
     """
 
     def real_timeit(method: typing.Callable[..., typing.Any]):
@@ -49,7 +49,7 @@ def time_single_execution(function_name: str):
 
         :param method: the decorated function.
         :return: a new function that wraps the decorated function and prints
-        the execution time of the decorated function.
+            the execution time of the decorated function.
         """
 
         def timed(*args, **kw):
@@ -82,7 +82,7 @@ class Timer:
         """Print the elapsed time since the last call to self.tic().
 
         :param text: Description of the task executed between the last
-        call to self.tic() and the call to self.toc(text).
+            call to self.tic() and the call to self.toc(text).
         """
         end_time: int = time.time()
         print("Task '{}' ended in {}s".format(text, end_time - self._time),
