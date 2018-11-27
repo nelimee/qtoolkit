@@ -43,27 +43,42 @@ def gatesequence2str(basis, basis_str, gate_sequence):
 
     sequence = gate_sequence.gates
     parameters = gate_sequence.params
-    return "".join(
-        [gate2str(basis[i], basis_str[i], parameters[i]) for i in sequence])
+    return "".join([gate2str(basis[i], basis_str[i], parameters[i]) for i in sequence])
 
 
 # Define the parameters of the algorithm
-basis = [qopconsts.H, qopconsts.T, qopconsts.T.H, qopconsts.Rx, qopconsts.Ry,
-         qopconsts.Rz]
-bounds = [None, None, None, numpy.array([[0], [2 * numpy.pi]]),
-          numpy.array([[0], [2 * numpy.pi]]),
-          numpy.array([[0], [2 * numpy.pi]])]
+basis = [
+    qopconsts.H,
+    qopconsts.T,
+    qopconsts.T.H,
+    qopconsts.Rx,
+    qopconsts.Ry,
+    qopconsts.Rz,
+]
+bounds = [
+    None,
+    None,
+    None,
+    numpy.array([[0], [2 * numpy.pi]]),
+    numpy.array([[0], [2 * numpy.pi]]),
+    numpy.array([[0], [2 * numpy.pi]]),
+]
 timer = qtimeit.Timer()
 
 # 1. Generate the random unitary we want to approximate.
 # U = sud_gen.generate_random_SUd(2)
-U = numpy.array([[0.11326673 + 0.64963326j, -0.39678188 + 0.63852284j],
-                 [0.39678188 + 0.63852284j, 0.11326673 - 0.64963326j]])
+U = numpy.array(
+    [
+        [0.113_266_73 + 0.649_633_26j, -0.396_781_88 + 0.638_522_84j],
+        [0.396_781_88 + 0.638_522_84j, 0.113_266_73 - 0.649_633_26j],
+    ]
+)
 
 # 3. Approximate it.
 timer.tic()
-cost, U_approx = gloa.group_leader(U, length=40, n=10, p=15, basis=basis,
-                                   max_iter=20, parameters_bound=bounds)
+cost, U_approx = gloa.group_leader(
+    U, length=40, n=10, p=15, basis=basis, max_iter=20, parameters_bound=bounds
+)
 timer.toc("GLOA algorithm")
 
 print("Decomposition characteristics:")

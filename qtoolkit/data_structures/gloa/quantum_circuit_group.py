@@ -56,12 +56,18 @@ class QuantumCircuitGroup:
     of :py:class:`~.QuantumCircuitGroup` to factorise the code.
     """
 
-    def __init__(self, basis: typing.Sequence[qop.QuantumOperation],
-                 objective_unitary: qtypes.UnitaryMatrix, length: int, p: int,
-                 r: numpy.ndarray, correctness_weight: float,
-                 circuit_cost_weight: float,
-                 circuit_cost_func: qcirc.CircuitCostFunction,
-                 parameters_bounds: qtypes.Bounds = None) -> None:
+    def __init__(
+        self,
+        basis: typing.Sequence[qop.QuantumOperation],
+        objective_unitary: qtypes.UnitaryMatrix,
+        length: int,
+        p: int,
+        r: numpy.ndarray,
+        correctness_weight: float,
+        circuit_cost_weight: float,
+        circuit_cost_func: qcirc.CircuitCostFunction,
+        parameters_bounds: qtypes.Bounds = None,
+    ) -> None:
         """Initialise the :py:class:`~.QuantumCircuitGroup` instance.
 
         A :py:class:`~.QuantumCircuitGroup` is a group composed of `p` instances
@@ -91,9 +97,11 @@ class QuantumCircuitGroup:
         """
         self._qubit_number = objective_unitary.shape[0].bit_length() - 1
         self._circuits = [
-            qc_gen.generate_random_quantum_circuit(self._qubit_number, basis,
-                                                   length, parameters_bounds)
-            for _ in range(p)]
+            qc_gen.generate_random_quantum_circuit(
+                self._qubit_number, basis, length, parameters_bounds
+            )
+            for _ in range(p)
+        ]
         self._basis = basis
         self._r = r
         self._length = length
@@ -115,11 +123,13 @@ class QuantumCircuitGroup:
         changed in order to update the cached costs.
         """
         for i in range(len(self._circuits)):
-            self._costs[i] = qdists.gloa_objective_function(self._circuits[i],
-                                                            self._objective_unitary,
-                                                            self._correctness_weight,
-                                                            self._circuit_cost_weight,
-                                                            self._circuit_cost_func)
+            self._costs[i] = qdists.gloa_objective_function(
+                self._circuits[i],
+                self._objective_unitary,
+                self._correctness_weight,
+                self._circuit_cost_weight,
+                self._circuit_cost_func,
+            )
 
     def get_leader(self) -> typing.Tuple[float, qcirc.QuantumCircuit]:
         """Get the best quantum circuit of the group.
@@ -141,29 +151,29 @@ class QuantumCircuitGroup:
         # For each member of the group, mutate and recombine it and see if the
         # newly created member is better.
         for seq_idx, current in enumerate(self._circuits):
-            new_circuit = qcirc.QuantumCircuit(self._qubit_number,
-                                               cache_matrix=True)
-            random = qc_gen.generate_random_quantum_circuit(self._qubit_number,
-                                                            self._basis,
-                                                            self._length,
-                                                            self._param_bounds)
+            new_circuit = qcirc.QuantumCircuit(self._qubit_number, cache_matrix=True)
+            random = qc_gen.generate_random_quantum_circuit(
+                self._qubit_number, self._basis, self._length, self._param_bounds
+            )
 
-            for ops in zip(current.operations, leader.operations,
-                           random.operations):
+            for ops in zip(current.operations, leader.operations, random.operations):
                 new_circuit.add_operation(self._combine_operations(ops))
 
-            new_cost = qdists.gloa_objective_function(new_circuit,
-                                                      self._objective_unitary,
-                                                      self._correctness_weight,
-                                                      self._circuit_cost_weight,
-                                                      self._circuit_cost_func)
+            new_cost = qdists.gloa_objective_function(
+                new_circuit,
+                self._objective_unitary,
+                self._correctness_weight,
+                self._circuit_cost_weight,
+                self._circuit_cost_func,
+            )
             if new_cost < self._costs[seq_idx]:
                 self._circuits[seq_idx] = new_circuit
                 self._costs[seq_idx] = new_cost
         return
 
-    def _combine_operations(self, operations: typing.Sequence[
-        qop.QuantumOperation]) -> qop.QuantumOperation:
+    def _combine_operations(
+        self, operations: typing.Sequence[qop.QuantumOperation]
+    ) -> qop.QuantumOperation:
         """Combine the 3 given operations into one operation.
 
         The combined operation is randomly chosen from the 3 given operations
@@ -179,17 +189,18 @@ class QuantumCircuitGroup:
         control_number = len(new_operation.controls)
         new_operation.controls = []
         new_operation.target = numpy.random.choice(
-            [op1.target, op2.target, op3.target], p=self._r)
+            [op1.target, op2.target, op3.target], p=self._r
+        )
 
         while len(new_operation.controls) < control_number:
             ctrl = numpy.random.randint(0, self._qubit_number)
-            if ctrl != new_operation.target and ctrl not in \
-                new_operation.controls:
+            if ctrl != new_operation.target and ctrl not in new_operation.controls:
                 new_operation.controls.append(ctrl)
 
         if new_operation.is_parametrised():
             raise NotImplementedError(
-                "Parametrised operations are not supported for the moment.")
+                "Parametrised operations are not supported for the moment."
+            )
         return new_operation
 
     @property

@@ -56,8 +56,12 @@ def su2_to_so3(U: qtypes.SU2Matrix) -> qtypes.SO3Vector:
     # The minus appears because there is a minus in the exponential we
     # convert to, which is not present in the formula given in the link.
     coefficients = numpy.array(
-        [-numpy.imag(U[0, 1]), numpy.real(U[1, 0]),
-         numpy.imag((U[1, 1] - U[0, 0]) / 2.0)])
+        [
+            -numpy.imag(U[0, 1]),
+            numpy.real(U[1, 0]),
+            numpy.imag((U[1, 1] - U[0, 0]) / 2.0),
+        ]
+    )
 
     cos_theta_2 = numpy.real((U[0, 0] + U[1, 1]) / 2.0)
     # The vector $\hat{n}$ is supposed to be of unit-length so its norm
@@ -98,9 +102,11 @@ def so3_to_su2(coefficients: qtypes.SO3Vector) -> qtypes.SU2Matrix:
         normalised_coefficients = coefficients / theta
         theta_2 = theta / 2
         sin_theta_2 = numpy.sin(theta_2)
-        unitary = (numpy.cos(theta_2) * identity - 1.j * sin_theta_2 * (
-            normalised_coefficients[0] * mconsts.P_X + normalised_coefficients[
-            1] * mconsts.P_Y + normalised_coefficients[2] * mconsts.P_Z))
+        unitary = numpy.cos(theta_2) * identity - 1.0j * sin_theta_2 * (
+            normalised_coefficients[0] * mconsts.P_X
+            + normalised_coefficients[1] * mconsts.P_Y
+            + normalised_coefficients[2] * mconsts.P_Z
+        )
         return unitary
 
 
@@ -122,8 +128,13 @@ def su2_to_H(unitary: qtypes.SU2Matrix) -> numpy.ndarray:
         the matrix.
     """
     coefficients = numpy.array(
-        [numpy.real(unitary[0, 0]), -numpy.imag(unitary[0, 1]),
-         numpy.real(unitary[1, 0]), numpy.imag(unitary[1, 1])])
+        [
+            numpy.real(unitary[0, 0]),
+            -numpy.imag(unitary[0, 1]),
+            numpy.real(unitary[1, 0]),
+            numpy.imag(unitary[1, 1]),
+        ]
+    )
     return coefficients
 
 
@@ -144,9 +155,11 @@ def H_to_su2(coefficients: numpy.ndarray) -> qtypes.SU2Matrix:
         matrix.
     :return: the :math:`SU(2)` matrix corresponding to the given coefficients.
     """
-    return coefficients[0] * mconsts.ID2 - 1.j * (
-        coefficients[1] * mconsts.P_X + coefficients[2] * mconsts.P_Y +
-        coefficients[3] * mconsts.P_Z)
+    return coefficients[0] * mconsts.ID2 - 1.0j * (
+        coefficients[1] * mconsts.P_X
+        + coefficients[2] * mconsts.P_Y
+        + coefficients[3] * mconsts.P_Z
+    )
 
 
 def unitary_to_su2(unitary: qtypes.UnitaryMatrix) -> qtypes.SU2Matrix:

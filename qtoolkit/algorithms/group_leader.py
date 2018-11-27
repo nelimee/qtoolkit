@@ -50,18 +50,24 @@ import numpy
 import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 import qtoolkit.utils.types as qtypes
-from qtoolkit.data_structures.gloa.quantum_circuit_population import \
-    QuantumCircuitPopulation
+from qtoolkit.data_structures.gloa.quantum_circuit_population import (
+    QuantumCircuitPopulation,
+)
 
 
-def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
-                 basis: typing.Sequence[qop.QuantumOperation], n: int = 15,
-                 p: int = 25, parameters_bound: qtypes.Bounds = None,
-                 max_iter: int = 100, r: numpy.ndarray = None,
-                 correctness_weight: float = 0.9,
-                 circuit_cost_weight: float = 0.1,
-                 circuit_cost_func: qcirc.CircuitCostFunction = None) -> \
-    typing.Tuple[float, qcirc.QuantumCircuit]:
+def group_leader(
+    unitary: qtypes.UnitaryMatrix,
+    length: int,
+    basis: typing.Sequence[qop.QuantumOperation],
+    n: int = 15,
+    p: int = 25,
+    parameters_bound: qtypes.Bounds = None,
+    max_iter: int = 100,
+    r: numpy.ndarray = None,
+    correctness_weight: float = 0.9,
+    circuit_cost_weight: float = 0.1,
+    circuit_cost_func: qcirc.CircuitCostFunction = None,
+) -> typing.Tuple[float, qcirc.QuantumCircuit]:
     """Implementation of the Group Leader Optimisation algorithm.
 
     The article presenting this algorithm can be found at
@@ -116,11 +122,20 @@ def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
         def circuit_cost_func(_: qcirc.QuantumCircuit) -> float:
             return 1.0
 
-    population = QuantumCircuitPopulation(basis, unitary, length, n, p, r,
-                                          correctness_weight, circuit_cost_weight,
-                                          circuit_cost_func, parameters_bound)
+    population = QuantumCircuitPopulation(
+        basis,
+        unitary,
+        length,
+        n,
+        p,
+        r,
+        correctness_weight,
+        circuit_cost_weight,
+        circuit_cost_func,
+        parameters_bound,
+    )
     for i in range(max_iter):
-        print(f"Iteration n°{i}/{max_iter}...", end=' ')
+        print(f"Iteration n°{i}/{max_iter}...", end=" ")
         population.perform_mutation_and_recombination()
         population.perform_one_way_crossover()
         print(f"[{population.get_leader()[0]}]")

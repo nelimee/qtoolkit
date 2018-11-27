@@ -46,7 +46,7 @@ def generate_random_SUd(dim: int) -> qtypes.SUdMatrix:
     :param dim: Dimension of the matrix to be generated.
     :return: a random :math:`SU(d)` matrix distributed with Haar measure.
     """
-    Z = (rand.rand(dim, dim) + 1.j * rand.rand(dim, dim)) / numpy.sqrt(2)
+    Z = (rand.rand(dim, dim) + 1.0j * rand.rand(dim, dim)) / numpy.sqrt(2)
     return _complex_matrix_to_SUd(Z)
 
 
@@ -61,10 +61,10 @@ def coefficient_to_SUd(coefficients: numpy.ndarray) -> qtypes.SUdMatrix:
     each_matrix_size = total_size // 2
     dim = int(numpy.floor(numpy.sqrt(each_matrix_size)))
 
-    real = coefficients[:dim * dim].reshape((dim, dim))
-    imag = coefficients[dim * dim:].reshape((dim, dim))
+    real = coefficients[: dim * dim].reshape((dim, dim))
+    imag = coefficients[dim * dim :].reshape((dim, dim))
 
-    return _complex_matrix_to_SUd((real + 1.j * imag) / numpy.sqrt(2))
+    return _complex_matrix_to_SUd((real + 1.0j * imag) / numpy.sqrt(2))
 
 
 def _complex_matrix_to_SUd(matrix: qtypes.GenericMatrix) -> qtypes.SUdMatrix:

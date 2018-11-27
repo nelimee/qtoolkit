@@ -41,12 +41,14 @@ import sympy
 # Qiskit-related types
 QuantumGateParameter = typing.Union[float, int, complex, sympy.Basic]
 GateParameterTransformation = typing.Callable[
-    [QuantumGateParameter], QuantumGateParameter]
+    [QuantumGateParameter], QuantumGateParameter
+]
 
 QuantumBit = typing.Tuple[qiskit.QuantumRegister, int]
 ClassicalBit = typing.Tuple[qiskit.ClassicalRegister, int]
 QuantumGateArgument = typing.Union[
-    qiskit.QuantumRegister, qiskit.ClassicalRegister, QuantumBit, ClassicalBit]
+    qiskit.QuantumRegister, qiskit.ClassicalRegister, QuantumBit, ClassicalBit
+]
 # TODO: change this type name.
 QuantumInstructions = typing.Union[qiskit.QuantumCircuit, qiskit.CompositeGate]
 
@@ -66,8 +68,11 @@ SUMatrix = GenericMatrix
 GenericArray = typing.Union[numpy.ndarray, scipy.sparse.spmatrix]
 
 UnsignedIntegerType = typing.Union[
-    typing.Type[numpy.uint8], typing.Type[numpy.uint16], typing.Type[
-        numpy.uint32], typing.Type[numpy.uint64]]
+    typing.Type[numpy.uint8],
+    typing.Type[numpy.uint16],
+    typing.Type[numpy.uint32],
+    typing.Type[numpy.uint64],
+]
 
 # Other types
 NearestNeighbourQueryable = typing.Any

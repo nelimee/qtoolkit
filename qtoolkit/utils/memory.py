@@ -36,7 +36,7 @@ from collections import Set, Mapping, deque
 from numbers import Number
 
 zero_depth_bases = (str, bytes, Number, range, bytearray)
-iteritems = 'items'
+iteritems = "items"
 
 
 def getsize(obj_0: typing.Any) -> int:
@@ -62,14 +62,14 @@ def getsize(obj_0: typing.Any) -> int:
         elif isinstance(obj, (tuple, list, Set, deque)):
             size += sum(inner(i) for i in obj)
         elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
-            size += sum(
-                inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
+            size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
         # Check for custom object instances - may subclass above too
-        if hasattr(obj, '__dict__'):
+        if hasattr(obj, "__dict__"):
             size += inner(vars(obj))
-        if hasattr(obj, '__slots__'):  # can have __slots__ with __dict__
-            size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if
-                        hasattr(obj, s))
+        if hasattr(obj, "__slots__"):  # can have __slots__ with __dict__
+            size += sum(
+                inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s)
+            )
         return size
 
     return inner(obj_0)
@@ -101,27 +101,24 @@ def first_level_sizes_report(obj_0: typing.Any, _seen_ids: set = None) -> dict:
         elif isinstance(obj, (tuple, list, Set, deque)):
             size += sum(inner(i) for i in obj)
         elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
-            size += sum(
-                inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
+            size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
         # Check for custom object instances - may subclass above too
-        if hasattr(obj, '__dict__'):
+        if hasattr(obj, "__dict__"):
             size += inner(vars(obj))
-        if hasattr(obj, '__slots__'):  # can have __slots__ with __dict__
-            size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if
-                        hasattr(obj, s))
+        if hasattr(obj, "__slots__"):  # can have __slots__ with __dict__
+            size += sum(
+                inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s)
+            )
         return size
 
-    if hasattr(obj_0, '__dict__'):
+    if hasattr(obj_0, "__dict__"):
         dictionary = obj_0.__dict__
     elif isinstance(obj_0, Mapping):
         dictionary = obj_0
     else:
         raise NotImplementedError("No dictionary to analyse!")
 
-    sizes = {
-        "__object__": sys.getsizeof(obj_0),
-        "__dict__"  : sys.getsizeof(dictionary)
-    }
+    sizes = {"__object__": sys.getsizeof(obj_0), "__dict__": sys.getsizeof(dictionary)}
     for k, v in dictionary.items():
         sizes[k] = inner(v) + inner(k)
     return sizes
@@ -137,7 +134,8 @@ def list_first_level_size_report(obj_list, _seen_ids: set = None):
         _seen_ids = set()
 
     final_report = merge_reports(
-        (first_level_sizes_report(obj, _seen_ids) for obj in obj_list))
+        (first_level_sizes_report(obj, _seen_ids) for obj in obj_list)
+    )
     return final_report
 
 
@@ -171,8 +169,7 @@ def size_report(raw_size_report: dict) -> str:
     for size, key in sorted_sizes:
         report += format_string.format(key, byte_number_to_human_format(size))
         total_size += size
-    report += format_string.format("TOTAL",
-                                   byte_number_to_human_format(total_size))
+    report += format_string.format("TOTAL", byte_number_to_human_format(total_size))
     return report
 
 

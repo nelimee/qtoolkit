@@ -45,9 +45,11 @@ class GateParameter:
 
     """
 
-    def __init__(self, rule_identifier: typing.Hashable,
-                 transformation: typing.Callable[[float], float] = lambda
-                     x: x) -> None:
+    def __init__(
+        self,
+        rule_identifier: typing.Hashable,
+        transformation: typing.Callable[[float], float] = lambda x: x,
+    ) -> None:
         """Initialise a :py:class:`~.GateParameter` instance.
 
         :param rule_identifier: An identifier that will be shared by all

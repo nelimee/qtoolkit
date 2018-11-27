@@ -43,18 +43,19 @@ import typing
 
 import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
-import \
-    qtoolkit.data_structures.quantum_circuit.simplifier\
-        .quantum_circuit_simplifier as qsimpl
+import qtoolkit.data_structures.quantum_circuit.simplifier.quantum_circuit_simplifier as qsimpl
 
 
-def generate_all_quantum_circuits(basis: typing.Sequence[qop.QuantumOperation],
-                                  depth: int, qubit_number: int,
-                                  simplifier: qsimpl.QuantumCircuitSimplificationDetector,
-                                  include_nodes: bool = False,
-                                  return_progress: bool = False) -> \
-    typing.Iterable[typing.Union[
-        qcirc.QuantumCircuit, typing.Tuple[qcirc.QuantumCircuit, int]]]:
+def generate_all_quantum_circuits(
+    basis: typing.Sequence[qop.QuantumOperation],
+    depth: int,
+    qubit_number: int,
+    simplifier: qsimpl.QuantumCircuitSimplificationDetector,
+    include_nodes: bool = False,
+    return_progress: bool = False,
+) -> typing.Iterable[
+    typing.Union[qcirc.QuantumCircuit, typing.Tuple[qcirc.QuantumCircuit, int]]
+]:
     """Generate all the non-simplifiable quantum circuits.
 
     This function yields each non-simplifiable (according to the given
@@ -95,22 +96,30 @@ def generate_all_quantum_circuits(basis: typing.Sequence[qop.QuantumOperation],
 
     # From https://stackoverflow.com/questions/952914/making-a-flat-list-out
     # -of-list-of-lists-in-python#45323085
-    variations = list(itertools.chain.from_iterable(
-        (_generate_all_variations(op, qubit_number) for op in basis)))
+    variations = list(
+        itertools.chain.from_iterable(
+            (_generate_all_variations(op, qubit_number) for op in basis)
+        )
+    )
 
     if return_progress:
-        return _gen_all_qcircs_progress_impl(depth, quantum_circuit, simplifier,
-                                             variations, include_nodes)
+        return _gen_all_qcircs_progress_impl(
+            depth, quantum_circuit, simplifier, variations, include_nodes
+        )
     else:
-        return _gen_all_qcircs_impl(depth, quantum_circuit, simplifier,
-                                    variations, include_nodes)
+        return _gen_all_qcircs_impl(
+            depth, quantum_circuit, simplifier, variations, include_nodes
+        )
 
 
-def _gen_all_qcircs_progress_impl(depth: int, qc: qcirc.QuantumCircuit,
-                                  simplifier: qsimpl.QuantumCircuitSimplificationDetector,
-                                  variations: typing.List[qop.QuantumOperation],
-                                  include_nodes: bool = False,
-                                  progress: int = 0):
+def _gen_all_qcircs_progress_impl(
+    depth: int,
+    qc: qcirc.QuantumCircuit,
+    simplifier: qsimpl.QuantumCircuitSimplificationDetector,
+    variations: typing.List[qop.QuantumOperation],
+    include_nodes: bool = False,
+    progress: int = 0,
+):
     """Generate all the non-simplifiable quantum circuits.
 
     :param depth: Maximum length of the generated sequences. If `include_nodes`
@@ -145,9 +154,9 @@ def _gen_all_qcircs_progress_impl(depth: int, qc: qcirc.QuantumCircuit,
         qc.add_operation(variant)
         progress += 1
         if not simplifier.is_simplifiable_from_last(qc):
-            yield from _gen_all_qcircs_progress_impl(depth - 1, qc, simplifier,
-                                                     variations, include_nodes,
-                                                     progress)
+            yield from _gen_all_qcircs_progress_impl(
+                depth - 1, qc, simplifier, variations, include_nodes, progress
+            )
         else:
             # We pruned some circuit, we need to update the progress
             # accordingly.
@@ -155,10 +164,13 @@ def _gen_all_qcircs_progress_impl(depth: int, qc: qcirc.QuantumCircuit,
         qc.pop()
 
 
-def _gen_all_qcircs_impl(depth: int, qc: qcirc.QuantumCircuit,
-                         simplifier: qsimpl.QuantumCircuitSimplificationDetector,
-                         variations: typing.List[qop.QuantumOperation],
-                         include_nodes: bool = False):
+def _gen_all_qcircs_impl(
+    depth: int,
+    qc: qcirc.QuantumCircuit,
+    simplifier: qsimpl.QuantumCircuitSimplificationDetector,
+    variations: typing.List[qop.QuantumOperation],
+    include_nodes: bool = False,
+):
     """Generate all the non-simplifiable quantum circuits.
 
     :param depth: Maximum length of the generated sequences. If `include_nodes`
@@ -191,8 +203,9 @@ def _gen_all_qcircs_impl(depth: int, qc: qcirc.QuantumCircuit,
     for variant in variations:
         qc.add_operation(variant)
         if not simplifier.is_simplifiable_from_last(qc):
-            yield from _gen_all_qcircs_impl(depth - 1, qc, simplifier,
-                                            variations, include_nodes)
+            yield from _gen_all_qcircs_impl(
+                depth - 1, qc, simplifier, variations, include_nodes
+            )
         qc.pop()
 
 
@@ -209,12 +222,11 @@ def _generate_all_variations(op: qop.QuantumOperation, qubit_number: int):
     """
     assert len(op.controls) < 2, "Multi-controlled gates are not supported."
 
-    no_control = (len(op.controls) == 0)
+    no_control = len(op.controls) == 0
 
     for trgt in range(qubit_number):
         if no_control:
             yield qop.QuantumOperation(op.gate, trgt)
         else:
-            for ctrl in itertools.chain(range(trgt),
-                                        range(trgt + 1, qubit_number)):
+            for ctrl in itertools.chain(range(trgt), range(trgt + 1, qubit_number)):
                 yield qop.QuantumOperation(op.gate, trgt, [ctrl])

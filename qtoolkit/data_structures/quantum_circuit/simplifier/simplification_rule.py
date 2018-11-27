@@ -70,9 +70,7 @@ class SimplificationRule:
         """
         raise NotImplementedError("This method should be overridden.")
 
-    def is_simplifiable_from_last(self,
-                                  quantum_circuit: qcirc.QuantumCircuit) -> \
-        bool:
+    def is_simplifiable_from_last(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
         """Check if the last part of `quantum_circuit` is simplifiable.
 
         This method can be used to check if the last gate of the quantum circuit
@@ -87,14 +85,11 @@ class SimplificationRule:
 
 
 class InverseRule(SimplificationRule):
-
     def __init__(self, quantum_gate: qgate.QuantumGate) -> None:
         self._gate = quantum_gate
         self._inverse = quantum_gate.H
 
-    def is_simplifiable_from_last(self,
-                                  quantum_circuit: qcirc.QuantumCircuit) -> \
-        bool:
+    def is_simplifiable_from_last(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
         if quantum_circuit.size < 2:
             return False
 
@@ -104,55 +99,51 @@ class InverseRule(SimplificationRule):
         if len(op_names) < 2:
             return False
 
-        result = (self._gate.name == op_names[0] and self._inverse.name ==
-                  op_names[1])
+        result = self._gate.name == op_names[0] and self._inverse.name == op_names[1]
         result = result or (
-            self._inverse.name == op_names[0] and self._gate.name == op_names[
-            1])
+            self._inverse.name == op_names[0] and self._gate.name == op_names[1]
+        )
         return result
 
 
 class CXInverseRule(SimplificationRule):
-
-    def is_simplifiable_from_last(self,
-                                  quantum_circuit: qcirc.QuantumCircuit) -> \
-        bool:
+    def is_simplifiable_from_last(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
         if quantum_circuit.size < 2:
             return False
 
         last = quantum_circuit.last
         operations = list(
-            quantum_circuit.get_n_last_operations_on_qubit(2, last.target))
+            quantum_circuit.get_n_last_operations_on_qubit(2, last.target)
+        )
         if len(operations) < 2:
             return False
 
         op1, op2 = operations[0], operations[1]
 
         result = True
-        result = result and (op1.gate.name == 'X' and op2.gate.name == 'X')
+        result = result and (op1.gate.name == "X" and op2.gate.name == "X")
         result = result and (op1.target == op2.target)
         result = result and (
-            len(op1.controls) == 1 and len(op2.controls) == 1 and op1.controls[
-            0] == op2.controls[0])
+            len(op1.controls) == 1
+            and len(op2.controls) == 1
+            and op1.controls[0] == op2.controls[0]
+        )
         return result
 
 
 class RepeatedRule(SimplificationRule):
-
-    def __init__(self, quantum_gate: qgate.QuantumGate,
-                 repetition: int) -> None:
+    def __init__(self, quantum_gate: qgate.QuantumGate, repetition: int) -> None:
         self._gate = quantum_gate
         self._repetition = repetition
 
-    def is_simplifiable_from_last(self,
-                                  quantum_circuit: qcirc.QuantumCircuit) -> \
-        bool:
+    def is_simplifiable_from_last(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
         if quantum_circuit.size < self._repetition:
             return False
 
         last = quantum_circuit.last
-        opgen = quantum_circuit.get_n_last_operations_on_qubit(self._repetition,
-                                                               last.target)
+        opgen = quantum_circuit.get_n_last_operations_on_qubit(
+            self._repetition, last.target
+        )
         op_names = [op.gate.name for op in opgen]
         if len(op_names) < self._repetition:
             return False
@@ -161,15 +152,13 @@ class RepeatedRule(SimplificationRule):
 
 
 class NearIdentityRule(SimplificationRule):
-
     def __init__(self, atol: float = 1e-8, rtol: float = 1e-5):
         self._atol = atol
         self._rtol = rtol
 
-    def is_simplifiable_from_last(self,
-                                  quantum_circuit: qcirc.QuantumCircuit) -> \
-        bool:
+    def is_simplifiable_from_last(self, quantum_circuit: qcirc.QuantumCircuit) -> bool:
         matrix = quantum_circuit.matrix
         dim = matrix.shape[0]
-        return numpy.allclose(matrix, numpy.identity(dim), rtol=self._rtol,
-                              atol=self._atol)
+        return numpy.allclose(
+            matrix, numpy.identity(dim), rtol=self._rtol, atol=self._atol
+        )

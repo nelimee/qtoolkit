@@ -57,9 +57,10 @@ def time_single_execution(function_name: str):
             result = method(*args, **kw)
             end = time.time()
             elapsed_time_ms = int(1000 * (end - start))
-            print("Execution time for {}: {}ms".format(function_name,
-                                                       elapsed_time_ms),
-                  flush=True)
+            print(
+                "Execution time for {}: {}ms".format(function_name, elapsed_time_ms),
+                flush=True,
+            )
             return result
 
         return timed
@@ -85,5 +86,4 @@ class Timer:
             call to self.tic() and the call to self.toc(text).
         """
         end_time: int = time.time()
-        print("Task '{}' ended in {}s".format(text, end_time - self._time),
-              flush=True)
+        print("Task '{}' ended in {}s".format(text, end_time - self._time), flush=True)

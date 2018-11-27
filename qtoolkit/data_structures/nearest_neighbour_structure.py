@@ -75,14 +75,13 @@ class NearestNeighbourStructure:
 
         :param data_size: Length of item vector that will be indexed
         """
-        self._annoy_index = annoy.AnnoyIndex(data_size, metric='euclidean')
+        self._annoy_index = annoy.AnnoyIndex(data_size, metric="euclidean")
         self._scipy_kdtree = None
         self._scipy_data = list()
         self._quantum_circuits = list()
         self._tree_number = -1
 
-    def add_item(self, index: int,
-                 quantum_circuit: qcirc.QuantumCircuit) -> None:
+    def add_item(self, index: int, quantum_circuit: qcirc.QuantumCircuit) -> None:
         """Add the given `quantum_circuit` to the indexed items.
 
         :param index: Unique index for the given quantum circuit. See the
@@ -93,8 +92,9 @@ class NearestNeighbourStructure:
             the search space.
         """
         matrix = quantum_circuit.matrix
-        vector = numpy.concatenate((numpy.real(matrix).reshape((-1, 1)),
-                                    numpy.imag(matrix).reshape((-1, 1))))
+        vector = numpy.concatenate(
+            (numpy.real(matrix).reshape((-1, 1)), numpy.imag(matrix).reshape((-1, 1)))
+        )
         self._annoy_index.add_item(index, vector)
         self._scipy_data.append(vector)
         self._quantum_circuits.append(copy.copy(quantum_circuit).compress())
@@ -115,7 +115,8 @@ class NearestNeighbourStructure:
         self._tree_number = tree_number
         self._annoy_index.build(tree_number)
         self._scipy_data = numpy.array(self._scipy_data).reshape(
-            (len(self._quantum_circuits), -1))
+            (len(self._quantum_circuits), -1)
+        )
         self._scipy_kdtree = scipy.spatial.cKDTree(self._scipy_data)
 
     def save(self, filename: str) -> None:
@@ -131,7 +132,7 @@ class NearestNeighbourStructure:
         """
         filepath = os.path.join(qconsts.data_dir, filename)
         self._annoy_index.save(filepath)
-        with open(filepath + '.circ', 'wb') as of:
+        with open(filepath + ".circ", "wb") as of:
             pickle.dump(self._quantum_circuits, of)
 
     def load(self, filename: str) -> None:
@@ -141,7 +142,7 @@ class NearestNeighbourStructure:
         """
         filepath = os.path.join(qconsts.data_dir, filename)
         self._annoy_index.load(filepath)
-        with open(filepath + '.circ', 'rb') as input_file:
+        with open(filepath + ".circ", "rb") as input_file:
             self._quantum_circuits = pickle.load(input_file)
 
         n = len(self._quantum_circuits)
@@ -150,14 +151,19 @@ class NearestNeighbourStructure:
         self._scipy_data = numpy.zeros((n, m))
         for idx, circuit in enumerate(self._quantum_circuits):
             matrix = circuit.matrix
-            vector = numpy.concatenate((numpy.real(matrix).reshape((1, -1)),
-                                        numpy.imag(matrix).reshape((1, -1))),
-                                       axis=1)
+            vector = numpy.concatenate(
+                (
+                    numpy.real(matrix).reshape((1, -1)),
+                    numpy.imag(matrix).reshape((1, -1)),
+                ),
+                axis=1,
+            )
             self._scipy_data[idx] = vector
         self._scipy_kdtree = scipy.spatial.cKDTree(self._scipy_data)
 
-    def query(self, matrix: qtypes.UnitaryMatrix) -> typing.Tuple[
-        float, qcirc.QuantumCircuit]:
+    def query(
+        self, matrix: qtypes.UnitaryMatrix
+    ) -> typing.Tuple[float, qcirc.QuantumCircuit]:
         """Query the underlying data structure for nearest-neighbour of matrix.
 
         .. warning::
@@ -169,13 +175,14 @@ class NearestNeighbourStructure:
         :return: The distance of the found approximation along with the index of
             the approximation.
         """
-        vector = numpy.concatenate((numpy.real(matrix).reshape((-1, 1)),
-                                    numpy.imag(matrix).reshape((-1, 1))))
+        vector = numpy.concatenate(
+            (numpy.real(matrix).reshape((-1, 1)), numpy.imag(matrix).reshape((-1, 1)))
+        )
         # Nearest neighbours
-        nns, dists = self._annoy_index.get_nns_by_vector(vector, 1,
-                                                         include_distances=True)
-        dists_scipy, nns_scipy = self._scipy_kdtree.query(vector.reshape((-1,)),
-                                                          1)
+        nns, dists = self._annoy_index.get_nns_by_vector(
+            vector, 1, include_distances=True
+        )
+        dists_scipy, nns_scipy = self._scipy_kdtree.query(vector.reshape((-1,)), 1)
         # # BRUTEFORCE
         # distances = numpy.linalg.norm(
         #     self._bruteforce_data - su2_trans.su2_to_so3(matrix), axis=1)

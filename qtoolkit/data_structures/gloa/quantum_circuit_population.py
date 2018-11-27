@@ -50,12 +50,19 @@ import qtoolkit.utils.types as qtypes
 class QuantumCircuitPopulation:
     """A list of several :py:class:`QuantumCircuitGroup` instances."""
 
-    def __init__(self, basis: typing.Sequence[qop.QuantumOperation],
-                 objective_unitary: qtypes.UnitaryMatrix, length: int, n: int,
-                 population: int, r: numpy.ndarray, correctness_weight: float,
-                 circuit_cost_weight: float,
-                 circuit_cost_func: qcirc.CircuitCostFunction,
-                 parameters_bounds: qtypes.Bounds = None) -> None:
+    def __init__(
+        self,
+        basis: typing.Sequence[qop.QuantumOperation],
+        objective_unitary: qtypes.UnitaryMatrix,
+        length: int,
+        n: int,
+        population: int,
+        r: numpy.ndarray,
+        correctness_weight: float,
+        circuit_cost_weight: float,
+        circuit_cost_func: qcirc.CircuitCostFunction,
+        parameters_bounds: qtypes.Bounds = None,
+    ) -> None:
         """Initialise the :py:class:`~.QuantumCircuitPopulation` instance.
 
         :param basis: a sequence of allowed operations. The operations can be
@@ -82,10 +89,19 @@ class QuantumCircuitPopulation:
             (default value) means that no gate in `basis` is parametrised.
         """
         self._groups = [
-            gsg.QuantumCircuitGroup(basis, objective_unitary, length,
-                                    population, r, correctness_weight,
-                                    circuit_cost_weight, circuit_cost_func,
-                                    parameters_bounds) for _ in range(n)]
+            gsg.QuantumCircuitGroup(
+                basis,
+                objective_unitary,
+                length,
+                population,
+                r,
+                correctness_weight,
+                circuit_cost_weight,
+                circuit_cost_func,
+                parameters_bounds,
+            )
+            for _ in range(n)
+        ]
         self._population = population
         self._length = length
         self._correctness_weight = correctness_weight
@@ -103,8 +119,7 @@ class QuantumCircuitPopulation:
         number_of_parameters = self._length * self._population
         for group in self._groups:
             # Number of cross-over we will perform on the current group.
-            crossover_number = numpy.random.randint(
-                number_of_parameters // 2 + 1)
+            crossover_number = numpy.random.randint(number_of_parameters // 2 + 1)
             # Perform the cross-overs.
             for _ in range(crossover_number):
                 # Pick at random the indices.
@@ -114,24 +129,27 @@ class QuantumCircuitPopulation:
                 new_circuit = copy.copy(group.circuits[circuit_index])
                 current_params = new_circuit[operation_index].parameters
                 if current_params is not None:
-                    new_params = self._get_parameters_from_group(group, len(
-                        current_params))
+                    new_params = self._get_parameters_from_group(
+                        group, len(current_params)
+                    )
                     new_circuit[operation_index].parameters = new_params
                 old_cost = group.costs[circuit_index]
-                new_cost = qdists.gloa_objective_function(new_circuit,
-                                                          self._objective_unitary,
-                                                          self._correctness_weight,
-                                                          self._circuit_cost_weight,
-                                                          self._circuit_cost_func)
+                new_cost = qdists.gloa_objective_function(
+                    new_circuit,
+                    self._objective_unitary,
+                    self._correctness_weight,
+                    self._circuit_cost_weight,
+                    self._circuit_cost_func,
+                )
                 if new_cost < old_cost:
                     group.circuits[circuit_index] = new_circuit
                     group.costs[circuit_index] = new_cost
         return
 
     @staticmethod
-    def _get_parameters_from_group(group: gsg.QuantumCircuitGroup,
-                                   parameter_number: int) -> typing.Sequence[
-        float]:
+    def _get_parameters_from_group(
+        group: gsg.QuantumCircuitGroup, parameter_number: int
+    ) -> typing.Sequence[float]:
         circuits_ids = list(range(len(group.circuits)))
         parameters = []
         while len(parameters) < parameter_number and circuits_ids:
@@ -160,8 +178,7 @@ class QuantumCircuitPopulation:
         """
         costs_and_leaders = [group.get_leader() for group in self._groups]
 
-        leader_costs = [cost_and_leader[0] for cost_and_leader in
-                        costs_and_leaders]
+        leader_costs = [cost_and_leader[0] for cost_and_leader in costs_and_leaders]
 
         best_cost_idx: int = numpy.argmin(leader_costs)
 

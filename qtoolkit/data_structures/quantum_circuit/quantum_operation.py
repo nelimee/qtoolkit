@@ -42,13 +42,13 @@ import qtoolkit.utils.constants.matrices as mconsts
 
 
 class QuantumOperation:
-
-    def __init__(self,
-                 gate: typing.Union[gh.QuantumGate, gh.ParametrisedQuantumGate],
-                 target: Optional[int] = None,
-                 controls: Optional[typing.Sequence[Optional[int]]] = None,
-                 parameters: Optional[
-                     typing.Sequence[Optional[float]]] = None) -> None:
+    def __init__(
+        self,
+        gate: typing.Union[gh.QuantumGate, gh.ParametrisedQuantumGate],
+        target: Optional[int] = None,
+        controls: Optional[typing.Sequence[Optional[int]]] = None,
+        parameters: Optional[typing.Sequence[Optional[float]]] = None,
+    ) -> None:
         """A class representing a quantum operation.
 
         For the moment, the QuantumOperation class only support 1-qubit gates
@@ -73,17 +73,21 @@ class QuantumOperation:
         """
         if controls is None:
             controls = list()
-        assert target is None or target not in controls, (
-            "The target qubit cannot be used as a control qubit.")
+        assert (
+            target is None or target not in controls
+        ), "The target qubit cannot be used as a control qubit."
         self._gate = gate
         self._target = target
         self._controls = controls
         self._parameters = parameters
 
-    def __copy__(self) -> 'QuantumOperation':
-        return QuantumOperation(self._gate, self._target,
-                                copy.copy(self._controls),
-                                copy.copy(self._parameters))
+    def __copy__(self) -> "QuantumOperation":
+        return QuantumOperation(
+            self._gate,
+            self._target,
+            copy.copy(self._controls),
+            copy.copy(self._parameters),
+        )
 
     @property
     def gate(self):
@@ -141,8 +145,7 @@ class QuantumOperation:
                 # If we are on the target qubit then apply the gate.
                 if qubit_index == self._target:
                     if self.is_parametrised():
-                        ret = numpy.kron(ret,
-                                         self._gate(self.parameters).matrix)
+                        ret = numpy.kron(ret, self._gate(self.parameters).matrix)
                     else:
                         ret = numpy.kron(ret, self._gate.matrix)
                 # Else, we should multiply by the gate that is controlled.
@@ -151,12 +154,12 @@ class QuantumOperation:
             return ret
 
         # Else, we have control qubits.
-        ret = numpy.zeros((2 ** qubit_number, 2 ** qubit_number),
-                          dtype=numpy.complex)
+        ret = numpy.zeros((2 ** qubit_number, 2 ** qubit_number), dtype=numpy.complex)
         # For each possible values for the control qubits.
         for ctrl_values in range(2 ** len(self._controls)):
-            ctrl_values_list = [(ctrl_values >> k) & 1 for k in
-                                range(len(self._controls))]
+            ctrl_values_list = [
+                (ctrl_values >> k) & 1 for k in range(len(self._controls))
+            ]
             current_control_index = 0
             current_matrix = 1
             for qubit_index in range(qubit_number):
@@ -169,18 +172,21 @@ class QuantumOperation:
                             m = self._gate(self.parameters).matrix
                             current_matrix = numpy.kron(current_matrix, m)
                         else:
-                            current_matrix = numpy.kron(current_matrix,
-                                                        self._gate.matrix)
+                            current_matrix = numpy.kron(
+                                current_matrix, self._gate.matrix
+                            )
                     # Else, we should multiply by the gate that is controlled.
                     else:
                         current_matrix = numpy.kron(current_matrix, mconsts.ID2)
                 # Else if we are on a control qubit, determine if we should
                 # use P0 or P1 and apply it.
                 elif qubit_index in self._controls:
-                    current_matrix = numpy.kron(current_matrix,
-                                                mconsts.P1 if ctrl_values_list[
-                                                    current_control_index]
-                                                else mconsts.P0)
+                    current_matrix = numpy.kron(
+                        current_matrix,
+                        mconsts.P1
+                        if ctrl_values_list[current_control_index]
+                        else mconsts.P0,
+                    )
                     current_control_index += 1
                 # Else, the current qubit do nothing.
                 else:
@@ -188,7 +194,7 @@ class QuantumOperation:
             ret += current_matrix
         return ret
 
-    def inverse_inplace(self) -> 'QuantumOperation':
+    def inverse_inplace(self) -> "QuantumOperation":
         """Inverse the quantum operation *in place*.
 
         :return: the modified quantum operation.
@@ -199,7 +205,7 @@ class QuantumOperation:
         self._gate = self._gate.H
         return self
 
-    def inverse(self) -> 'QuantumOperation':
+    def inverse(self) -> "QuantumOperation":
         """Copy and inverse the copied quantum operation.
 
         The current instance is not modified.
@@ -213,7 +219,7 @@ class QuantumOperation:
         return cpy.inverse_inplace()
 
     @property
-    def H(self) -> 'QuantumOperation':
+    def H(self) -> "QuantumOperation":
         """Copy and inverse the copied quantum operation.
 
         The current instance is not modified.
@@ -233,7 +239,7 @@ class QuantumOperation:
         """
         return callable(self._gate)
 
-    def __call__(self, *args: float, **kwargs) -> 'QuantumOperation':
+    def __call__(self, *args: float, **kwargs) -> "QuantumOperation":
         """Parametrise the quantum operation.
 
         :param args: The parameter(s) of the quantum operation we want to
@@ -243,5 +249,6 @@ class QuantumOperation:
         :return: a new non-parametrised quantum operation.
         :raise TypeError: if not self._is_parametrised().
         """
-        return QuantumOperation(self._gate(*args, **kwargs), self.target,
-                                self.controls, args)
+        return QuantumOperation(
+            self._gate(*args, **kwargs), self.target, self.controls, args
+        )

@@ -64,10 +64,12 @@ class QuantumInstruction:
 class ParametrisedQuantumGate(QuantumInstruction):
     """Class representing a parametrised quantum gate."""
 
-    def __init__(self, name: str,
-                 matrix_generator: qtypes.UnitaryMatrixGenerator,
-                 inverse: typing.Callable[
-                     ['QuantumGate'], 'QuantumGate']) -> None:
+    def __init__(
+        self,
+        name: str,
+        matrix_generator: qtypes.UnitaryMatrixGenerator,
+        inverse: typing.Callable[["QuantumGate"], "QuantumGate"],
+    ) -> None:
         """Initialise the parametrised quantum gate.
 
         :param name: the name of the quantum gate.
@@ -82,7 +84,7 @@ class ParametrisedQuantumGate(QuantumInstruction):
         self._matrix_generator = matrix_generator
         self._inverse_callable = inverse
 
-    def __call__(self, *args: float, **kwargs) -> 'QuantumGate':
+    def __call__(self, *args: float, **kwargs) -> "QuantumGate":
         """Generate the quantum gate obtained with the given parameters.
 
         :param args: the parameters forwarded to the `matrix_generator`
@@ -93,16 +95,24 @@ class ParametrisedQuantumGate(QuantumInstruction):
         parametrised quantum gate with the given parameters.
         """
         params = numpy.array(args)
-        return QuantumGate(self.name, self._matrix_generator(params, **kwargs),
-                           self._inverse_callable, parameters=params)
+        return QuantumGate(
+            self.name,
+            self._matrix_generator(params, **kwargs),
+            self._inverse_callable,
+            parameters=params,
+        )
 
 
 class QuantumGate(QuantumInstruction):
     """Class representing a quantum gate."""
 
-    def __init__(self, name: str, matrix: qtypes.UnitaryMatrix,
-                 inverse: typing.Callable[['QuantumGate'], 'QuantumGate'],
-                 parameters: typing.Optional[numpy.ndarray] = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        matrix: qtypes.UnitaryMatrix,
+        inverse: typing.Callable[["QuantumGate"], "QuantumGate"],
+        parameters: typing.Optional[numpy.ndarray] = None,
+    ) -> None:
         """Initialise the :py:class:`~.QuantumGate` instance.
 
         :param name: name of the quantum gate.

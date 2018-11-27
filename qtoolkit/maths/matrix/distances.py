@@ -54,8 +54,7 @@ def fowler_distance(A: qtypes.UnitaryMatrix, B: qtypes.UnitaryMatrix) -> float:
     return numpy.sqrt(numpy.abs(dimension - trace) / dimension)
 
 
-def fowler_distances(A: numpy.ndarray,
-                     B: qtypes.UnitaryMatrix) -> numpy.ndarray:
+def fowler_distances(A: numpy.ndarray, B: qtypes.UnitaryMatrix) -> numpy.ndarray:
     """Computes the Fowler distances between each :math:`A[i]` and :math:`B`.
 
     This method is an optimised version of
@@ -110,12 +109,13 @@ def operator_norm(U: qtypes.UnitaryMatrix) -> float:
     return numpy.max(numpy.abs(eigenvalues))
 
 
-def gloa_objective_function(gate_sequence: qcirc.QuantumCircuit,
-                            U: qtypes.UnitaryMatrix,
-                            correctness_weight: float,
-                            circuit_cost_weight: float,
-                            circuit_cost_func: qcirc.CircuitCostFunction) -> \
-    float:
+def gloa_objective_function(
+    gate_sequence: qcirc.QuantumCircuit,
+    U: qtypes.UnitaryMatrix,
+    correctness_weight: float,
+    circuit_cost_weight: float,
+    circuit_cost_func: qcirc.CircuitCostFunction,
+) -> float:
     """Compute a modified GLOA objective function.
 
     The GLOA article is: https://arxiv.org/abs/1004.2242.

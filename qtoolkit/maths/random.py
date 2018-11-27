@@ -42,7 +42,7 @@ def generate_random_complex(amplitude: float = 1.0) -> complex:
     """
     coefficients = numpy.random.rand(2)
     norm = numpy.linalg.norm(coefficients)
-    return (coefficients[0] + 1.j * coefficients[1]) * amplitude / norm
+    return (coefficients[0] + 1.0j * coefficients[1]) * amplitude / norm
 
 
 def generate_random_normalised_complexes(size: int) -> numpy.ndarray:
@@ -51,7 +51,7 @@ def generate_random_normalised_complexes(size: int) -> numpy.ndarray:
     :param size: A positive integer.
     :return: a normalised list of size random complex numbers.
     """
-    complexes = numpy.random.rand(size) + 1.j * numpy.random.rand(size)
+    complexes = numpy.random.rand(size) + 1.0j * numpy.random.rand(size)
     return complexes / numpy.linalg.norm(complexes)
 
 

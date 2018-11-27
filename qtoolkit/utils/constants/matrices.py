@@ -44,7 +44,7 @@ import qtoolkit.utils.types as qtypes
 ######################################
 # Definitions with sigma
 SIGMA_X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
-SIGMA_Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
+SIGMA_Y = numpy.array([[0, -1.0j], [1.0j, 0]], dtype=numpy.complex)
 SIGMA_Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)
 SIGMA_X_SU2 = SIGMA_X / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_X))
 SIGMA_Y_SU2 = SIGMA_Y / numpy.lib.scimath.sqrt(numpy.linalg.det(SIGMA_Y))
@@ -72,35 +72,33 @@ ID2_SU2 = ID2
 #       QUANTUM GATES MATRICES       #
 ######################################
 X = numpy.array([[0, 1], [1, 0]], dtype=numpy.complex)
-Y = numpy.array([[0, -1.j], [1.j, 0]], dtype=numpy.complex)
+Y = numpy.array([[0, -1.0j], [1.0j, 0]], dtype=numpy.complex)
 Z = numpy.array([[1, 0], [0, -1]], dtype=numpy.complex)
 H = numpy.array([[1, 1], [1, -1]], dtype=numpy.complex) / numpy.sqrt(2)
-S = numpy.array([[1, 0], [0, 1.j]], dtype=numpy.complex)
-T = numpy.array([[1, 0], [0, numpy.exp(1.j * numpy.pi / 4)]],
-                dtype=numpy.complex)
-CX = numpy.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
-                 dtype=numpy.complex)
+S = numpy.array([[1, 0], [0, 1.0j]], dtype=numpy.complex)
+T = numpy.array([[1, 0], [0, numpy.exp(1.0j * numpy.pi / 4)]], dtype=numpy.complex)
+CX = numpy.array(
+    [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=numpy.complex
+)
 
 
 def Rx(parameters: numpy.ndarray) -> qtypes.SU2Matrix:
     theta = parameters[0]
     cos_theta_2 = numpy.cos(theta / 2)
-    isin_theta_2 = -1.j * numpy.sin(theta / 2)
-    return numpy.array(
-        [[cos_theta_2, isin_theta_2], [isin_theta_2, cos_theta_2]])
+    isin_theta_2 = -1.0j * numpy.sin(theta / 2)
+    return numpy.array([[cos_theta_2, isin_theta_2], [isin_theta_2, cos_theta_2]])
 
 
 def Ry(parameters: numpy.ndarray) -> qtypes.SU2Matrix:
     theta = parameters[0]
     cos_theta_2 = numpy.cos(theta / 2)
     sin_theta_2 = numpy.sin(theta / 2)
-    return numpy.array(
-        [[cos_theta_2, -sin_theta_2], [sin_theta_2, cos_theta_2]])
+    return numpy.array([[cos_theta_2, -sin_theta_2], [sin_theta_2, cos_theta_2]])
 
 
 def Rz(parameters: numpy.ndarray) -> qtypes.SU2Matrix:
     theta = parameters[0]
-    e_itheta_2 = numpy.exp(1.j * theta / 2)
+    e_itheta_2 = numpy.exp(1.0j * theta / 2)
     return numpy.array([[1 / e_itheta_2, 0], [0, e_itheta_2]])
 
 
@@ -111,8 +109,7 @@ Z_SU2 = Z / numpy.lib.scimath.sqrt(numpy.linalg.det(Z))
 H_SU2 = H / numpy.lib.scimath.sqrt(numpy.linalg.det(H))
 S_SU2 = S / numpy.lib.scimath.sqrt(numpy.linalg.det(S))
 T_SU2 = T / numpy.lib.scimath.sqrt(numpy.linalg.det(T))
-CX_SU2 = CX / numpy.lib.scimath.sqrt(
-    numpy.lib.scimath.sqrt(numpy.linalg.det(CX)))
+CX_SU2 = CX / numpy.lib.scimath.sqrt(numpy.lib.scimath.sqrt(numpy.linalg.det(CX)))
 
 P0 = numpy.array([[1, 0], [0, 0]], dtype=numpy.complex)
 P1 = numpy.array([[0, 0], [0, 1]], dtype=numpy.complex)

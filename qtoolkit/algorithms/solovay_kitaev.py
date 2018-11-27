@@ -44,9 +44,11 @@ import qtoolkit.maths.matrix.sud.group_commutator as sud_gc
 import qtoolkit.utils.types as qtypes
 
 
-def solovay_kitaev(unitary: qtypes.UnitaryMatrix, recursion_level: int,
-                   approximations: qnn.NearestNeighbourStructure) -> \
-    qcirc.QuantumCircuit:
+def solovay_kitaev(
+    unitary: qtypes.UnitaryMatrix,
+    recursion_level: int,
+    approximations: qnn.NearestNeighbourStructure,
+) -> qcirc.QuantumCircuit:
     """Implementation of the Solovay-Kitaev algorithm for :math:`U(2^n)`.
 
     :param unitary: The unitary matrix to decompose. `unitary` should be in

@@ -39,8 +39,9 @@ import qtoolkit.maths.matrix.su2.group_commutator as gc_su2
 import qtoolkit.utils.types as qtypes
 
 
-def group_commutator(U: qtypes.SUdMatrix) -> typing.Tuple[
-    qtypes.SUdMatrix, qtypes.SUdMatrix]:
+def group_commutator(
+    U: qtypes.SUdMatrix
+) -> typing.Tuple[qtypes.SUdMatrix, qtypes.SUdMatrix]:
     """Finds :math:`V, W \\in U(d) \\mid U = V W V^\\dagger W^\\dagger`.
 
     .. note::
@@ -60,11 +61,11 @@ def group_commutator(U: qtypes.SUdMatrix) -> typing.Tuple[
     Wt = numpy.identity(dim, dtype=numpy.complex)
     # We construct the 2*2 diagonal matrices from the eigenvalues.
     for i in range(dim // 2):
-        U_i = numpy.diag(eigvals[2 * i:2 * (i + 1)])
+        U_i = numpy.diag(eigvals[2 * i : 2 * (i + 1)])
         V_i, W_i = gc_su2.group_commutator(U_i)
         a, b = 2 * i, 2 * i + 1
-        Vt[a:b + 1, a:b + 1] = V_i
-        Wt[a:b + 1, a:b + 1] = W_i
+        Vt[a : b + 1, a : b + 1] = V_i
+        Wt[a : b + 1, a : b + 1] = W_i
     V, W = eigvecs @ Vt @ eigvecs.T.conj(), eigvecs @ Wt @ eigvecs.T.conj()
 
     return V, W

@@ -41,8 +41,9 @@ import qtoolkit.maths.matrix.su2.transformations as su2trans
 import qtoolkit.utils.types as qtypes
 
 
-def group_commutator(U: qtypes.UnitaryMatrix) -> typing.Tuple[
-    qtypes.SU2Matrix, qtypes.SU2Matrix]:
+def group_commutator(
+    U: qtypes.UnitaryMatrix
+) -> typing.Tuple[qtypes.SU2Matrix, qtypes.SU2Matrix]:
     """Finds :math:`V, W \\in U(2) \\mid U = V W V^\\dagger W^\\dagger`.
 
     :param U: The unitary matrix in :math:`U(2)` to decompose.
@@ -71,8 +72,9 @@ def group_commutator(U: qtypes.UnitaryMatrix) -> typing.Tuple[
     return V, W
 
 
-def _X_axis_su2_group_commutator_decompose(Ux: qtypes.SU2Matrix) -> \
-    typing.Tuple[qtypes.SU2Matrix, qtypes.SU2Matrix]:
+def _X_axis_su2_group_commutator_decompose(
+    Ux: qtypes.SU2Matrix
+) -> typing.Tuple[qtypes.SU2Matrix, qtypes.SU2Matrix]:
     """Finds :math:`A, B \\in U(d) \\mid Ux = A B A^\\dagger B^\\dagger`.
 
     This method is restricted to matrices Ux that are rotations around the
@@ -120,8 +122,12 @@ def _X_axis_su2_group_commutator_decompose(Ux: qtypes.SU2Matrix) -> \
     # We construct a and w such that the corresponding SU(2) matrices A
     # and W satisfy unitary_x == A @ W.
     w = numpy.array(
-        [phi * sin_phi_2 * numpy.cos(alpha), phi * sin_phi_2 * numpy.sin(alpha),
-         phi * cos_phi_2])
+        [
+            phi * sin_phi_2 * numpy.cos(alpha),
+            phi * sin_phi_2 * numpy.sin(alpha),
+            phi * cos_phi_2,
+        ]
+    )
     a = w.copy()
     a[2] = -w[2]
 

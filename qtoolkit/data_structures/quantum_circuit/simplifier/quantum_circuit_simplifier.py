@@ -43,11 +43,10 @@ of simplifiable sequences.
 
 import typing
 
-from qtoolkit.data_structures.quantum_circuit.quantum_circuit import \
-    QuantumCircuit
-from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule \
-    import \
-    SimplificationRule
+from qtoolkit.data_structures.quantum_circuit.quantum_circuit import QuantumCircuit
+from qtoolkit.data_structures.quantum_circuit.simplifier.simplification_rule import (
+    SimplificationRule,
+)
 
 
 class QuantumCircuitSimplificationDetector:
@@ -60,8 +59,7 @@ class QuantumCircuitSimplificationDetector:
     :py:class:`~.QuantumCircuit` is simplifiable according to at least one rule.
     """
 
-    def __init__(self,
-                 simplifications: typing.List[SimplificationRule]) -> None:
+    def __init__(self, simplifications: typing.List[SimplificationRule]) -> None:
         """Simplifiable sequence detector for :py:class:`~.QuantumCircuit`
         instances.
 

@@ -35,8 +35,7 @@ import qtoolkit.maths.matrix.su2.transformations as su2trans
 import qtoolkit.utils.types as qtypes
 
 
-def similarity_matrix(A: qtypes.SU2Matrix,
-                      B: qtypes.SU2Matrix) -> qtypes.SU2Matrix:
+def similarity_matrix(A: qtypes.SU2Matrix, B: qtypes.SU2Matrix) -> qtypes.SU2Matrix:
     """Find :math:`S \\in SU(2) \\mid A = S B S^\\dagger`.
 
     :param A: First :math:`SU(2)` matrix.

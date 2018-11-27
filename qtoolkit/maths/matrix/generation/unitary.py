@@ -48,8 +48,9 @@ def generate_random_unitary_matrix(d: int = 2) -> qtypes.UnitaryMatrix:
     return determinant * gen_sud.generate_random_SUd(d)
 
 
-def generate_unitary_matrix(alpha: complex, beta: complex,
-                            e_iphi: complex) -> qtypes.UnitaryMatrix:
+def generate_unitary_matrix(
+    alpha: complex, beta: complex, e_iphi: complex
+) -> qtypes.UnitaryMatrix:
     """Generate the matrix :math:`\\begin{pmatrix}\\alpha &\\beta \\\\ \
     -e^{i\\phi \\overline{\\beta}}& e^{i\\phi \\overline{\\alpha}}\
     \\end{pmatrix}`.
@@ -64,12 +65,14 @@ def generate_unitary_matrix(alpha: complex, beta: complex,
     :param e_iphi: A complex number on the unitary circle.
     :return: a unitary matrix in :math:`U(2)`.
     """
-    return numpy.array([[alpha, beta], [-e_iphi * numpy.conj(beta),
-                                        e_iphi * numpy.conj(alpha)]])
+    return numpy.array(
+        [[alpha, beta], [-e_iphi * numpy.conj(beta), e_iphi * numpy.conj(alpha)]]
+    )
 
 
-def coefficients_to_unitary(coefficients: numpy.ndarray,
-                            determinant: complex = 1) -> qtypes.UnitaryMatrix:
+def coefficients_to_unitary(
+    coefficients: numpy.ndarray, determinant: complex = 1
+) -> qtypes.UnitaryMatrix:
     """Generate the unitary matrix associated with the given coefficients.
 
     :param coefficients: a vector of :math:`2d^2` real numbers in
