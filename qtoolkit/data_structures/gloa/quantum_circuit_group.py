@@ -29,7 +29,13 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Implement the GateSequenceGroup class, used to implement GLOA."""
+"""Implement the :py:class:`~.QuantumCircuitGroup` class used in GLOA.
+
+The :py:class:`~.QuantumCircuitGroup` class represents what the `original paper\
+ <https://arxiv.org/abs/1004.2242>`_ call a "group". It is a collection of
+entities (in this particular case "entities" refers to "instances of
+:py:class:`~.QuantumCircuit`") admitting a leader.
+"""
 
 import copy
 import typing
@@ -43,8 +49,12 @@ import qtoolkit.maths.matrix.generation.quantum_circuit as qc_gen
 import qtoolkit.utils.types as qtypes
 
 
-class GateSequenceGroup:
-    """A group of gate sequences."""
+class QuantumCircuitGroup:
+    """A group of :py:class:`~.QuantumCircuit`.
+
+    The instances of :py:class:`~.QuantumCircuit` are grouped into an instance
+    of :py:class:`~.QuantumCircuitGroup` to factorise the code.
+    """
 
     def __init__(self, basis: typing.Sequence[qop.QuantumOperation],
                  objective_unitary: qtypes.UnitaryMatrix, length: int, p: int,
@@ -52,31 +62,32 @@ class GateSequenceGroup:
                  circuit_cost_weight: float,
                  circuit_cost_func: qcirc.CircuitCostFunction,
                  parameters_bounds: qtypes.Bounds = None) -> None:
-        """Initialise the GateSequenceGroup instance.
+        """Initialise the :py:class:`~.QuantumCircuitGroup` instance.
 
-        A GateSequenceGroup is a group of p instances of QuantumGateSequence.
+        A :py:class:`~.QuantumCircuitGroup` is a group composed of `p` instances
+        of :py:class:`~.QuantumCircuit`.
 
-        :param basis: gates available to construct the approximation. Each gate
-        can be either a numpy.ndarray (which means that the gate is not
-        parametrised) or a callable that takes a float as input and returns a
-        numpy.ndarray representing the quantum gate.
-        :param objective_unitary: unitary matrix we are trying to approximate.
-        :param length: length of the sequences that will be generated.
+        :param basis: a sequence of allowed operations. The operations can be
+            "abstract" (i.e. with None entries, see the documentation for the
+            :py:class:`~.QuantumOperation` class) or not (i.e. with specified
+            entries).
+            :param objective_unitary: unitary matrix we are trying to approximate.
+            :param length: length of the sequences that will be generated.
         :param p: population of the group, i.e. number of gate sequences
-        contained in this group.
+            contained in this group.
         :param r: rates determining the portion of old (r[0]), leader (r[1]) and
-        random (r[2]) that are used to generate new candidates.
+            random (r[2]) that are used to generate new candidates.
         :param correctness_weight: scalar representing the importance attached
-        to the correctness of the generated circuit.
+            to the correctness of the generated circuit.
         :param circuit_cost_weight: scalar representing the importance attached
-        to the cost of the generated circuit.
+            to the cost of the generated circuit.
         :param circuit_cost_func: a function that takes as input an instance of
-        QuantumGateSequence and returns a float representing the cost of the
-        given circuit.
+            :py:class:`~.QuantumCircuit` and returns a float representing the
+            cost of the given circuit.
         :param parameters_bounds: a list of bounds for each operation in the
-        basis. A None value in this list means that the corresponding operation
-        is not parametrised. A None value for the whole list (default value)
-        means that no gate in the basis is parametrised.
+            `basis`. A None value in this list means that the corresponding
+            operation is not parametrised. A None value for the whole list
+            (default value) means that no gate in `basis` is parametrised.
         """
         self._qubit_number = objective_unitary.shape[0].bit_length() - 1
         self._circuits = [
@@ -111,10 +122,8 @@ class GateSequenceGroup:
                                                             self._circuit_cost_func)
 
     def get_leader(self) -> typing.Tuple[float, qcirc.QuantumCircuit]:
-        """Get the best sequence of the group.
+        """Get the best quantum circuit of the group.
 
-        The cached costs should be up to date before calling this function. See
-        update_costs to know when the cached costs should be updated.
         :return: the best sequence of the group along with its cost.
         """
         idx: int = numpy.argmin(self._costs)
@@ -123,7 +132,8 @@ class GateSequenceGroup:
     def mutate_and_recombine(self) -> None:
         """Apply the mutate and recombine step of the GLOA.
 
-        See the GLOA paper for more precision on this step.
+        See the `GLOA paper <https://arxiv.org/abs/1004.2242>`_ for more
+        precision on this step.
         """
         # Pre-compute group leader data.
         _, leader = self.get_leader()
@@ -154,6 +164,15 @@ class GateSequenceGroup:
 
     def _combine_operations(self, operations: typing.Sequence[
         qop.QuantumOperation]) -> qop.QuantumOperation:
+        """Combine the 3 given operations into one operation.
+
+        The combined operation is randomly chosen from the 3 given operations
+        with the probability distribution `r` given at the instance construction
+        and then randomly mutated with characteristics of the other operations.
+
+        :param operations: A sequence of 3 :py:class:`~.QuantumOperation`.
+        :return: a random merge of the 3 given operations.
+        """
         op1, op2, op3 = operations[0], operations[1], operations[2]
 
         new_operation = copy.copy(numpy.random.choice(operations, p=self._r))
@@ -175,8 +194,10 @@ class GateSequenceGroup:
 
     @property
     def circuits(self) -> typing.List[qcirc.QuantumCircuit]:
+        """Getter for the stored list of :py:class:`~.QuantumCircuit`."""
         return self._circuits
 
     @property
     def costs(self):
+        """Getter for the pre-computed costs."""
         return self._costs

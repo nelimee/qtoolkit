@@ -31,8 +31,16 @@
 
 """Implementation of the Group Leader Optimisation Algorithm.
 
-This modules implements the GLOA algorithm as presented in
-https://arxiv.org/abs/1004.2242.
+This modules implements a modified version of the GLOA algorithm
+presented in https://arxiv.org/abs/1004.2242.
+
+The changes made to the algorithm were mainly done to restrict the
+algorithm to a specific set of operations, called "basis" in the code.
+This modification may not be profitable to the algorithm: the prior idea
+of its inventors was to use a very large set of allowed gates and then
+rephrase these gates with sequences of gates in the basis.
+A simpler version of the algorithm may be useful.
+TODO: implement the real algorithm to test accuracy and speed.
 """
 
 import typing
@@ -42,8 +50,8 @@ import numpy
 import qtoolkit.data_structures.quantum_circuit.quantum_circuit as qcirc
 import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 import qtoolkit.utils.types as qtypes
-from qtoolkit.data_structures.gloa.gate_sequence_population import \
-    GateSequencePopulation
+from qtoolkit.data_structures.gloa.quantum_circuit_population import \
+    QuantumCircuitPopulation
 
 
 def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
@@ -60,32 +68,44 @@ def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
     https://arxiv.org/abs/1004.2242.
 
     :param unitary: unitary matrix we want to approximate.
-    :param length: length of the resulting approximation sequence.
-    :param basis: gates available to construct the approximation. Each gate can
-    be either a numpy.ndarray (which means that the gate is not parametrised) or
-    a callable that takes a float as input and returns a numpy.ndarray
-    representing the quantum gate.
-    :param n: number of groups.
-    :param p: number of members in each group.
-    :param parameters_bound: bounds for the parameter of the quantum gates in
-    the basis. If None, this means that no quantum gate in the basis is
-    parametrised. If not all the quantum gates in the basis are parametrised,
-    the parameter bounds corresponding to non-parametrised quantum gates can
-    take any value.
+    :param length: length of the resulting approximation sequence. The generated
+        circuit will probably be simplifiable to a shorter quantum circuit, this
+        parameter represents the length of the randomly generated quantum
+        circuits, not the length of the simplified ones.
+    :param basis: a sequence of allowed operations. The operations can be
+        "abstract" (i.e. with None entries, see the documentation for the
+        :py:class:`~.QuantumOperation` class) or not (i.e. with specified
+        entries).
+    :param n: number of groups used. See the article for a more complete
+        description of the concept of "group".
+    :param p: number of quantum circuit in each group.
+    :param parameters_bound: bounds for the parameter(s) of the quantum gates in
+        the basis. Bounds are specified as a sequence of 2-D numpy arrays. The
+        first index (the index of the sequence) represent the gate concerned,
+        i.e. parameters_bound[i] represents the bounds for basis[i]. For each
+        gate, a bound is a 2-D numpy array. parameters_bound[i][0] is a 1-D
+        numpy array with [parameter_number] floating-point values representing
+        the lower-bounds of the parameters. Conversely, parameters_bound[i][1]
+        is a 1-D numpy array with [parameter_number] floating-point values
+        representing the upper-bounds of the parameters.
+        If None, this means that no quantum gate in the basis is parametrised.
+        If not all the quantum gates in the basis are parametrised, the
+        parameter bounds corresponding to non-parametrised quantum gates can
+        take any value (for example None).
     :param max_iter: maximum number of iteration performed by the algorithm.
     :param r: rates determining the portion of old (r[0]), leader (r[1]) and
-    random (r[2]) that are used to generate new candidates. If None, the default
-    value of the GLOA article is used: r = [0.8, 0.1, 0.1].
+        random (r[2]) that are used to generate new candidates. If None, the
+        default value of the GLOA article is used: r = [0.8, 0.1, 0.1].
     :param correctness_weight: scalar representing the importance attached to
-    the correctness of the generated circuit.
+        the correctness of the generated circuit.
     :param circuit_cost_weight: scalar representing the importance attached to
-    the cost of the generated circuit.
+        the cost of the generated circuit.
     :param circuit_cost_func: a function that takes as input an instance of
-    QuantumGateSequence and returns a float representing the cost of the given
-    circuit. If None, only the correctness will count and the circuit cost will
-    be ignored.
+        QuantumGateSequence and returns a float representing the cost of the
+        given circuit. If None, only the correctness will count and the circuit
+        cost will be ignored.
     :return: the best QuantumGateSequence found to approximate the given unitary
-    matrix.
+        matrix.
     """
     if r is None:
         r = numpy.array([0.8, 0.1, 0.1])
@@ -96,9 +116,9 @@ def group_leader(unitary: qtypes.UnitaryMatrix, length: int,
         def circuit_cost_func(_: qcirc.QuantumCircuit) -> float:
             return 1.0
 
-    population = GateSequencePopulation(basis, unitary, length, n, p, r,
-                                        correctness_weight, circuit_cost_weight,
-                                        circuit_cost_func, parameters_bound)
+    population = QuantumCircuitPopulation(basis, unitary, length, n, p, r,
+                                          correctness_weight, circuit_cost_weight,
+                                          circuit_cost_func, parameters_bound)
     for i in range(max_iter):
         print(f"Iteration n°{i}/{max_iter}...", end=' ')
         population.perform_mutation_and_recombination()

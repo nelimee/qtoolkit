@@ -29,7 +29,8 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Implementation of the group-commutator algorithm of Christopher Dawson."""
+"""Implementation of `the group-commutator algorithm of Christopher Dawson \
+<https://github.com/cmdawson/sk/blob/master/src/su2.cpp#L25>`_."""
 
 import typing
 
@@ -40,16 +41,16 @@ import qtoolkit.maths.matrix.su2.transformations as su2trans
 import qtoolkit.utils.types as qtypes
 
 
-def group_commutator(matrix: qtypes.UnitaryMatrix) -> typing.Tuple[
+def group_commutator(U: qtypes.UnitaryMatrix) -> typing.Tuple[
     qtypes.SU2Matrix, qtypes.SU2Matrix]:
-    """Finds V,W such that U = V @ W @ V.T.conj() @ W.T.conj().
+    """Finds :math:`V, W \\in U(2) \\mid U = V W V^\\dagger W^\\dagger`.
 
-    :param matrix: The unitary matrix to decompose.
-    :return: A tuple containing (V, W).
+    :param U: The unitary matrix in :math:`U(2)` to decompose.
+    :return: a tuple containing (:math:`V`, :math:`W`).
     """
     # unitary is a rotation of a unknown angle $\theta$ about some unknown
     # axis. Here, we find the angle $\theta$.
-    so3_unitary = su2trans.su2_to_so3(matrix)
+    so3_unitary = su2trans.su2_to_so3(U)
     theta = numpy.linalg.norm(so3_unitary, 2)
 
     # Then, we construct the matrix that consist of a rotation of $\theta$
@@ -57,7 +58,7 @@ def group_commutator(matrix: qtypes.UnitaryMatrix) -> typing.Tuple[
     X_unitary = su2trans.so3_to_su2(numpy.array([theta, 0.0, 0.0]))
     # We find the similarity matrix between the original unitary and the
     # rotation about the X-axis we just created.
-    S = sim_matrix.similarity_matrix(matrix, X_unitary)
+    S = sim_matrix.similarity_matrix(U, X_unitary)
 
     # Now we perform the real computations to find V and W, but we perform
     # them on the unitary rotating about the X-axis and not on the
@@ -70,25 +71,25 @@ def group_commutator(matrix: qtypes.UnitaryMatrix) -> typing.Tuple[
     return V, W
 
 
-def _X_axis_su2_group_commutator_decompose(unitary_x: qtypes.SU2Matrix) -> \
+def _X_axis_su2_group_commutator_decompose(Ux: qtypes.SU2Matrix) -> \
     typing.Tuple[qtypes.SU2Matrix, qtypes.SU2Matrix]:
-    """Finds A, B such that Ux = A @ B @ A.T.conj() @ B.T.conj().
+    """Finds :math:`A, B \\in U(d) \\mid Ux = A B A^\\dagger B^\\dagger`.
 
-    This method is restricted to matrices Ux that are rotations around
-    the X-axis.
+    This method is restricted to matrices Ux that are rotations around the
+    X-axis.
     From the analysis performed in http://arXiv.org/abs/quant-ph/0505030v2
-    section 4.1, A and B can be seen as rotations
+    section 4.1, A and B can be seen as rotations.
 
-    :param unitary_x: The unitary matrix to decompose.
-    :return: A tuple containing (A, B).
+    :param Ux: The unitary matrix in :math:`U(d)` to decompose.
+    :return: a tuple containing (:math:`A`, :math:`B`).
     """
-    # In the following code, theta is the angle of the given unitary_x,
-    # phi is the angle of A and B.
+    # In the following code, theta is the angle of the given Ux, phi is the
+    # angle of A and B.
 
     # We transform the input matrix as a vector of 4 real numbers because
     # these numbers are directly related to the cosinus and the sinus of
     # phi.
-    unitary_cart4_coefficients = su2trans.su2_to_H(unitary_x)
+    unitary_cart4_coefficients = su2trans.su2_to_H(Ux)
     # From these coefficients, we have directly the value of cos(phi/2).
     cos_theta_2 = unitary_cart4_coefficients[0]
 

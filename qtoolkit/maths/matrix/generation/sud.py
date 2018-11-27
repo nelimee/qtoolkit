@@ -29,7 +29,7 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""A set of functions to generate SU(d) matrices."""
+"""A set of functions to generate :math:`SU(d)` matrices."""
 
 import numpy
 import numpy.random as rand
@@ -38,23 +38,24 @@ import qtoolkit.utils.types as qtypes
 
 
 def generate_random_SUd(dim: int) -> qtypes.SUdMatrix:
-    """Generate a random matrix in SU(d).
+    """Generate a random matrix in :math:`SU(d)`.
 
     The algorithm implemented is presented in the article
     https://arxiv.org/pdf/math-ph/0609050.pdf.
 
-    :param dim: dimension of the matrix to be generated.
-    :return: A random SU(d) matrix distributed with Haar measure.
+    :param dim: Dimension of the matrix to be generated.
+    :return: a random :math:`SU(d)` matrix distributed with Haar measure.
     """
     Z = (rand.rand(dim, dim) + 1.j * rand.rand(dim, dim)) / numpy.sqrt(2)
     return _complex_matrix_to_SUd(Z)
 
 
 def coefficient_to_SUd(coefficients: numpy.ndarray) -> qtypes.SUdMatrix:
-    """Generate the SU(d) matrix corresponding to the given coefficients.
+    """Generate the :math:`SU(d)` matrix corresponding to the given coefficients.
 
-    :param coefficients: a vector of 2*(d**2) real numbers in [0, 1).
-    :return: the corresponding SU(d) matrix.
+    :param coefficients: A vector of :math:`2d^2` real numbers in
+        :math:`[0, 1)`.
+    :return: the corresponding :math:`SU(d)` matrix.
     """
     total_size = coefficients.size
     each_matrix_size = total_size // 2
@@ -67,6 +68,8 @@ def coefficient_to_SUd(coefficients: numpy.ndarray) -> qtypes.SUdMatrix:
 
 
 def _complex_matrix_to_SUd(matrix: qtypes.GenericMatrix) -> qtypes.SUdMatrix:
+    """Internal function performing QR factorisation to generate SU(d) matrices.
+    """
     Q, R = numpy.linalg.qr(matrix)
     diag = numpy.diag(R)
     D = numpy.diag(diag / numpy.abs(diag))

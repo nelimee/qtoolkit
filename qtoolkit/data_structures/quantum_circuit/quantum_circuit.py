@@ -29,7 +29,12 @@
 # knowledge of the CeCILL-B license and that you accept its terms.
 # ======================================================================
 
-"""Implementation of the QuantumCircuit class."""
+"""Implementation of the :py:class:`~.QuantumCircuit` class.
+
+The :py:class:`~.QuantumCircuit` class represents a general quantum circuit as a
+Directed Acyclic Graph with possibly some multi-edges (2 edges can share the
+same source **and** the same target).
+"""
 
 import copy
 import typing
@@ -44,9 +49,16 @@ import qtoolkit.data_structures.quantum_circuit.quantum_operation as qop
 class QuantumCircuit:
 
     def __init__(self, qubit_number: int, cache_matrix: bool = True) -> None:
-        """Initialise QuantumCircuit instances.
+        """Initialise the :py:class:`~.QuantumCircuit` instance.
 
-        :param qubit_number: the number of qubits in the circuit.
+        For documentation about the :py:class:`~.QuantumCircuit` internals see
+        the :py:mod:`.quantum_circuit.quantum_circuit` documentation.
+
+        :param qubit_number: The number of qubits the instance will acts on.
+        :param cache_matrix: A boolean flag indicating if the instance should
+            keep in memory the current value of its representing matrix or if it
+            should recompute this matrix at each call to
+            :py:attr:`.QuantumCircuit.matrix`.
         """
         assert qubit_number > 0, "A circuit with less than 1 qubit cannot be " \
                                  "created."
@@ -68,7 +80,8 @@ class QuantumCircuit:
     def add_operation(self, operation: qop.QuantumOperation) -> None:
         """Add an operation to the circuit.
 
-        :param operation: the operation to add to the QuantumCircuit instance.
+        :param operation: The operation to add to the
+            :py:class:`~.QuantumCircuit` instance.
         """
         self._check_operation(operation)
         current_node_id = self._node_counter
@@ -94,19 +107,32 @@ class QuantumCircuit:
               controls: typing.Sequence[int] = ()) -> None:
         """Apply a quantum operation to the circuit.
 
-        :param gate: the quantum gate to apply.
-        :param target: the qubit to apply the operation on.
-        :param controls: the control qubit(s).
+        :param gate: The quantum gate to apply.
+        :param target: The target qubit. The quantum gate will be applied on
+            this qubit.
+        :param controls: The control qubit(s).
         """
         self.add_operation(qop.QuantumOperation(gate, target, controls))
 
     def _check_operation(self, operation: qop.QuantumOperation) -> None:
         """Check if the operation is valid. If not, raise an exception.
 
-        :param operation: the operation to check for validity.
+        :param operation: The operation to check for validity.
         :raise IndexError: if the qubits of the operation (target or control(s))
-        are not within the range of the current instance.
+            are not within the range of the current instance.
+        :raise RuntimeError: if one of the qubits on the operation (target or
+            control(s)) is None or if the target qubit is also listed in the
+            control qubit(s).
         """
+        if operation.target is None or any(
+            (ctrl is None for ctrl in operation.controls)):
+            raise RuntimeError(
+                "At least one of the target or control qubit is None. Generic "
+                "QuantumOperations are not supported in a QuantumCircuit "
+                "instance.")
+        if operation.target in operation.controls:
+            raise RuntimeError(
+                "The target qubit cannot be in the list of control qubits.")
         if operation.target >= self._qubit_number or operation.target < 0:
             raise IndexError(
                 f"The operation's target ({operation.target}) is not valid "
@@ -119,9 +145,9 @@ class QuantumCircuit:
                     "quantum circuit.")
 
     def pop(self) -> qop.QuantumOperation:
-        """Delete the last inserted operation and return it.
+        """Deletes the last inserted operation from the instance and returns it.
 
-        :return: the last inserted operation.
+        :return: The last inserted operation.
         """
         if self._node_counter <= self._qubit_number:
             raise RuntimeError(
@@ -142,56 +168,109 @@ class QuantumCircuit:
         return op
 
     def _create_edge(self, from_id: int, to_id: int, qubit_id: int) -> None:
+        """Create an edge between `from_id` and `to_id`.
+
+        :param from_id: Source of the edge.
+        :param to_id: Target of the edge.
+        :param qubit_id: Identifier of the qubit concerned by the target
+            operation.
+        """
         self._graph.add_edge(from_id, to_id, key=qubit_id)
 
-    def get_n_last_operations_on_qubit(self, n: int, qubit_id: int):
+    def get_n_last_operations_on_qubit_reversed(self, n: int, qubit_id: int) \
+        -> \
+        typing.Iterable[qop.QuantumOperation]:
+        """Get the `n` last inserted operations involving `qubit_id`.
+
+        The returned operations can have the qubit `qubit_id` either as target
+        or control qubit.
+
+        :param n: Number of quantum operation to retrieve.
+        :param qubit_id: Identifier of the qubit we are interested in.
+        :return: an iterable over the `n` last quantum operations involving
+            `qubit_id` in the reverse order of insertion.
+        :raise IndexError: if `qubit_id` is involved in less than `n`
+            operations.
+        """
+        try:
+            all_ops_gen = self.get_operations_on_qubit_reversed(qubit_id)
+            for op_id in range(n):
+                yield next(all_ops_gen)
+        except StopIteration:
+            raise IndexError(
+                f"Cannot retrieve {n} operations on qubit n°{qubit_id}: only "
+                f"{op_id} operation are available.")
+
+    def get_n_last_operations_on_qubit(self, n: int, qubit_id: int) -> \
+        typing.Iterable[qop.QuantumOperation]:
+        """Get the `n` last inserted operations involving `qubit_id`.
+
+        The returned operations can have the qubit `qubit_id` either as target
+        or control qubit.
+
+        :param n: Number of quantum operation to retrieve.
+        :param qubit_id: Identifier of the qubit we are interested in.
+        :return: an iterable over the `n` last quantum operations involving
+            `qubit_id` in the order of insertion.
+        :raise IndexError: if `qubit_id` is involved in less than `n`
+            operations.
+        """
         return list(self.get_n_last_operations_on_qubit_reversed(n, qubit_id))[
                ::-1]
 
-    def get_n_last_operations_on_qubit_reversed(self, n: int, qubit_id: int):
-        """Returns an iterable on the n last operations performed on the qubit.
+    def get_operations_on_qubit_reversed(self, qubit_id: int):
+        """Get all the operations involving `qubit_id`.
 
-        If there is not enough operations, returns all the operations.
+        The returned operations can have the qubit `qubit_id` either as target
+        or control qubit.
 
-        :param n: number of operations to look for.
-        :param qubit_id: the qubit of interest.
-        :return: an iterable of at most n items.
+        :param qubit_id: Identifier of the qubit we are interested in.
+        :return: an iterable over all the quantum operations involving
+            `qubit_id` in the reverse order of insertion.
         """
         current = self._last_inserted_operations[qubit_id]
-        while n > 0 and current >= self.qubit_number:
+        while current >= self.qubit_number:
             yield self._graph.nodes[current]['op']
-            n -= 1
             # Update the current node.
             current = next(filter(
                 lambda node_id: qubit_id in self._graph.get_edge_data(node_id,
                                                                       current),
                 self._graph.predecessors(current)))
 
-    def get_operations_on_qubit_reversed(self, qubit_id: int):
-        # Ask for node_counter operations. The get_n_last_operations_... will
-        # return node_counter operations if possible or all the operations on
-        # the given qubit.
-        return self.get_n_last_operations_on_qubit_reversed(self._node_counter,
-                                                            qubit_id)
-
     def get_operations_on_qubit(self, qubit_id: int):
-        # Ask for node_counter operations. The get_n_last_operations_... will
-        # return node_counter operations if possible or all the operations on
-        # the given qubit.
-        return self.get_n_last_operations_on_qubit(self._node_counter, qubit_id)
+        """Get all the operations involving `qubit_id`.
+
+        The returned operations can have the qubit `qubit_id` either as target
+        or control qubit.
+
+        :param qubit_id: Identifier of the qubit we are interested in.
+        :return: an iterable over all the quantum operations involving
+            `qubit_id` in the order of insertion.
+        """
+        return list(self.get_operations_on_qubit_reversed(qubit_id))[::-1]
 
     def __getitem__(self, idx: int) -> qop.QuantumOperation:
+        """Method used when []-indexing is used.
+
+        :param idx: The position of the operation we want to retrieve.
+        :return: The idx-th inserted operation.
+        """
         return self._graph.nodes[idx + self._qubit_number]['op']
 
     @property
-    def last(self):
-        if self._node_counter > self._qubit_number:
-            return self._graph.nodes[self._node_counter - 1]['op']
-        else:
-            return None
+    def last(self) -> qop.QuantumOperation:
+        """Getter for the last inserted operation.
+
+        :return: the last inserted operation.
+        :raise IndexError: if the circuit is empty.
+        """
+        if self._node_counter == self._qubit_number:
+            raise IndexError("Trying to recover the last operation of an "
+                             "empty QuantumCircuit.")
+        return self._graph.nodes[self._node_counter - 1]['op']
 
     @property
-    def operations(self):
+    def operations(self) -> typing.Iterable[qop.QuantumOperation]:
         """Getter on the operations performed in this quantum circuit.
 
         :return: a generator that generates all the operations of the circuit.
@@ -199,34 +278,22 @@ class QuantumCircuit:
         return (self._graph.nodes[i]['op'] for i in
                 range(self._qubit_number, self._node_counter))
 
-    def operations_on_qubit(self, qubit_index: int):
-        """Getter for the operations applied on the qubit at the given index.
-
-        Warning: for the moment this method does not use fully the graph
-        structure of the QuantumCircuit class and so iterate on all the quantum
-        operations.
-
-        :param qubit_index: the qubit we are interested in.
-        """
-        return filter(lambda op: op.target == qubit_index, self.operations)
-
-    def gates_on_qubit(self, qubit_index: int):
+    def gates_on_qubit(self, qubit_index: int) -> \
+        typing.Iterable[qop.QuantumOperation]:
         """Getter for the gates applied on the qubit at the given index.
 
-        Warning: for the moment this method does not use fully the graph
-        structure of the QuantumCircuit class and so iterate on all the quantum
-        operations.
-
         :param qubit_index: the qubit we are interested in.
-        :return:
+        :return: a generator yielding all the quantum gates in the circuit
+            that involve the specified qubit.
         """
-        return (op.gate for op in self.operations_on_qubit(qubit_index))
+        return (op.gate for op in self.get_operations_on_qubit(qubit_index))
 
     @property
     def matrix(self) -> numpy.ndarray:
         """Getter on the unitary matrix representing the circuit.
 
-        The matrix is re-computed each time the property is called.
+        Depending on the value of `cache_matrix` given at initialisation, this
+        method will either return the cached matrix or compute it.
 
         :return: the unitary matrix representing the current quantum circuit.
         """
@@ -238,20 +305,25 @@ class QuantumCircuit:
         return ret
 
     @property
-    def qubit_number(self):
+    def qubit_number(self) -> int:
         """Getter on the number of qubits of the current instance."""
         return self._qubit_number
 
     @property
-    def size(self):
+    def size(self) -> int:
+        """Getter on the number of quantum gates in the current instance."""
         return self._node_counter - self._qubit_number
 
     def __iadd__(self, other: 'QuantumCircuit') -> 'QuantumCircuit':
-        """Add all the operations contained in other to the current instance.
+        """Add all the operations contained in `other` to the current instance.
 
         :param other: the quantum circuit containing the operations to append
-        to the current instance.
+            to the current instance. `other` and the instance
+            :py:meth:`~.__iadd__` is called on should have the same number of
+            qubits.
         :return: The union of self and other.
+        :raise RuntimeError: if `self` and `other` have a different number of
+            qubits.
         """
         # 1. Checks
         if self.qubit_number != other.qubit_number:
@@ -286,10 +358,12 @@ class QuantumCircuit:
 
     def __matmul__(self: 'QuantumCircuit',
                    other: 'QuantumCircuit') -> 'QuantumCircuit':
+        """Wrapper around __iadd__ for the new '@' operator."""
         cpy = copy.copy(self)
         return cpy.__iadd__(other)
 
     def __copy__(self) -> 'QuantumCircuit':
+        """Override the default copy behaviour."""
         cpy = QuantumCircuit(self._qubit_number,
                              cache_matrix=self._cache_matrix)
         if self.compressed:
@@ -303,12 +377,22 @@ class QuantumCircuit:
         return cpy
 
     def compress(self) -> 'QuantumCircuit':
+        """Compress the instance to save some memory.
+
+        This method is useful when a large number of small circuits needs to be
+        stored in memory.
+
+        .. warning:: Several methods of the :py:class:`~.QuantumCircuit` class
+           will not work as expected (or will raise an exception) if called on
+           a compressed circuit.
+        """
         if not self.compressed:
             self._compressed_graph = CompressedMultiDiGraph(self._graph)
             del self._graph
         return self
 
     def uncompress(self) -> 'QuantumCircuit':
+        """Uncompress the instance."""
         if self.compressed:
             self._graph = self._compressed_graph.uncompress()
             del self._compressed_graph
@@ -316,9 +400,15 @@ class QuantumCircuit:
 
     @property
     def compressed(self) -> bool:
+        """Return True if the instance is compressed, else False."""
         return hasattr(self, '_compressed_graph')
 
     def inverse(self) -> 'QuantumCircuit':
+        """Create the inverse of the instance it is called on.
+
+        This method will create a new :py:class:`~.QuantumCircuit` and construct
+        in this new circuit the inverse of `self`.
+        """
         inv = QuantumCircuit(self._qubit_number,
                              cache_matrix=self._cache_matrix)
         for op in reversed(list(self.operations)):
@@ -327,15 +417,27 @@ class QuantumCircuit:
         return inv
 
     def __str__(self) -> str:
-        return '\n'.join(("{Cs}{opname} {controls}, {target}".format(
+        """Textual representation of the circuit.
+
+        The representation used is very similar to OpenQASM.
+        """
+        return '\n'.join(("{Cs}{opname} {controls}{commaornot}{target}".format(
             Cs="C" * len(op.controls), opname=op.gate.name,
-            controls=','.join(map(str, op.controls)), target=op.target) for op
+            controls=','.join(map(str, op.controls)),
+            commaornot=(', ' if op.controls else ''), target=op.target) for op
         in self.operations))
 
 
 class CompressedMultiDiGraph:
 
     def __init__(self, graph: nx.MultiDiGraph = None) -> None:
+        """Initialise the :py:class:`~.CompressedMultiDiGraph` instance.
+
+        Instances of :py:class:`~.CompressedMultiDiGraph` are just storing
+        a :py:class:`networkx.MultiDiGraph` in a more memory efficient format.
+
+        :param graph: The graph to compress.
+        """
         if graph is None:
             self._qubit_number = 0
             return
@@ -371,6 +473,7 @@ class CompressedMultiDiGraph:
                 self._qubit_number += 1
 
     def __copy__(self) -> 'CompressedMultiDiGraph':
+        """Override the default copy behaviour."""
         cpy = CompressedMultiDiGraph()
         cpy._qubit_number = self._qubit_number
         cpy._from_arr = self._from_arr.copy()
@@ -381,6 +484,10 @@ class CompressedMultiDiGraph:
         return cpy
 
     def uncompress(self) -> nx.MultiDiGraph:
+        """Uncompress the stored :py:class:`networkx.MultiDiGraph`.
+
+        :return: the uncompressed :py:class:`networkx.MultiDiGraph`.
+        """
         graph = nx.MultiDiGraph()
         if self._qubit_number == 0:
             return graph
